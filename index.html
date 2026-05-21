@@ -21,6 +21,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#1a1a2e;color:#e0e0e0;m
 .lbl{font-size:11.5px;color:#999;white-space:nowrap;min-width:88px}
 input[type=text],select{background:#0d1b2a;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;padding:6px 9px;font-size:13px;font-family:inherit;width:100%;transition:border-color .15s}
 input[type=text]:focus,select:focus{outline:none;border-color:#c1121f}
+input[type=text]:disabled{opacity:.4;cursor:not-allowed;color:#5a6a7a}
 input::placeholder{color:#3a4a5a}
 .rg{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .rg label{min-width:0;display:flex;align-items:center;gap:5px;cursor:pointer;color:#ccc;font-size:12px}
@@ -244,7 +245,13 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     </div>
     <div class="row"><span class="lbl">Shift start</span><input type="text" id="avTime" placeholder="10:30am" oninput="updAvail()" style="max-width:115px"></div>
     <div class="row" id="avShiftEndRow" style="display:none"><span class="lbl">Shift end</span><input type="text" id="avShiftEnd" placeholder="7pm" oninput="updAvail()" style="max-width:115px"></div>
-    <div class="row" id="avReturnRow"><span class="lbl">Expected return</span><input type="text" id="avReturn" placeholder="2:30pm" oninput="updAvail()" style="max-width:115px"></div>
+    <div class="row" id="avReturnRow">
+      <span class="lbl">Expected return</span>
+      <input type="text" id="avReturn" placeholder="2:30pm" oninput="updAvail()" style="max-width:115px" disabled>
+      <label class="fs-lbl" style="margin-left:10px;color:#aaa">
+        <input type="checkbox" id="avHasReturn" onchange="toggleExpectedReturn()"> Expected to Return
+      </label>
+    </div>
     <div class="row"><span class="lbl">Reason</span><input type="text" id="avReason" placeholder="Car repair" oninput="updAvail()"></div>
     <div class="hint" style="margin-top:8px">Use "Unavailable" when a tech goes off mid-shift. Use "Available again" when they return — or to add a new tech mid-shift (fill in Role and shift hours).</div>
   </div>
@@ -633,6 +640,17 @@ function radioAvail() {
   return el ? el.value : 'UNAVAILABLE';
 }
 
+// Expected-to-Return checkbox controls whether the avReturn input is editable.
+// Default: unchecked + disabled (grayed).  When checked, input becomes editable
+// and is required at send time.
+function toggleExpectedReturn() {
+  const cb  = document.getElementById('avHasReturn');
+  const inp = document.getElementById('avReturn');
+  inp.disabled = !cb.checked;
+  if (!cb.checked) inp.value = '';
+  updAvail();
+}
+
 function getSelectedTerritories() {
   const vals = ['avTerrN','avTerrC','avTerrS']
     .filter(id => document.getElementById(id)?.checked)
@@ -671,7 +689,8 @@ function buildAvailBody() {
   if (time)                                   lines.push(`Effective: ${time}`);
   if (status === 'AVAILABLE' && shiftEnd)     lines.push(`Shift End: ${shiftEnd}`);
   if (reason)                                 lines.push(`Reason: ${reason}`);
-  if (status === 'UNAVAILABLE' && ret)        lines.push(`Expected Return: ${ret}`);
+  const hasReturn = document.getElementById('avHasReturn')?.checked;
+  if (status === 'UNAVAILABLE' && hasReturn && ret) lines.push(`Expected Return: ${ret}`);
   return lines.join('\n');
 }
 
@@ -699,6 +718,14 @@ function openAvailGmail() {
   }
   const unknowns = collectUnknowns(inputs);
   if (unknowns.length) { showUnknownsAlert(unknowns, kindLabel); return; }
+  // Expected-to-Return: if checked, the time must be filled in.
+  if (availType === 'avail' && radioAvail() === 'UNAVAILABLE'
+      && document.getElementById('avHasReturn').checked
+      && !v('avReturn')) {
+    alert('"Expected to Return" is checked but the Expected return time is blank.\n\nEither uncheck the box (tech is out indefinitely) or fill in the return time.');
+    document.getElementById('avReturn').focus();
+    return;
+  }
   const url = 'https://mail.google.com/mail/?view=cm&fs=1'
     + '&to='   + encodeURIComponent(allRecipients().join(','))
     + '&su='   + encodeURIComponent(buildAvailSubject())
