@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAL Roadside Schedule Composer V2.0</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#1a1a2e;color:#e0e0e0;min-height:100vh}
+.hdr{background:#16213e;padding:14px 24px;border-bottom:2px solid #c1121f;display:flex;align-items:center;gap:16px}
+.hdr h1{font-size:17px;font-weight:700;color:#fff}
+.hdr p{font-size:11px;color:#888;margin-top:2px}
+.wrap{display:flex;gap:14px;padding:14px;max-width:1280px;margin:0 auto}
+.form{flex:1;min-width:0}
+.right{width:410px;flex-shrink:0}
+@media(max-width:900px){.wrap{flex-direction:column}.right{width:100%}}
+.card{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px;margin-bottom:10px}
+.ct{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#c1121f;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.ct .tog{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:#888;text-transform:none;font-weight:400;letter-spacing:0;cursor:pointer}
+.row{display:flex;gap:8px;margin-bottom:7px;align-items:center}
+.lbl{font-size:11.5px;color:#999;white-space:nowrap;min-width:88px}
+input[type=text],select{background:#0d1b2a;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;padding:6px 9px;font-size:13px;font-family:inherit;width:100%;transition:border-color .15s}
+input[type=text]:focus,select:focus{outline:none;border-color:#c1121f}
+input::placeholder{color:#3a4a5a}
+.rg{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.rg label{min-width:0;display:flex;align-items:center;gap:5px;cursor:pointer;color:#ccc;font-size:12px}
+.rg input[type=radio]{width:auto;accent-color:#c1121f}
+input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
+.rg-sep{width:1px;background:#2a3a5a;align-self:stretch;margin:0 4px;flex-shrink:0}
+.mode-lbl{color:#e8a020!important}
+.mode-lbl input[type=checkbox]{accent-color:#e8a020!important}
+.tr{display:flex;gap:6px;margin-bottom:5px;align-items:center}
+.tr input:nth-child(1){flex:2}
+.tr input:nth-child(2){flex:1;min-width:76px}
+.rm{background:none;border:none;color:#3a5a7a;cursor:pointer;font-size:16px;padding:2px 5px;line-height:1;border-radius:3px;flex-shrink:0}
+.rm:hover{color:#c1121f}
+.addrow{background:none;border:1px dashed #1a3050;color:#4a6a8a;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:4px;width:100%;text-align:left;margin-top:2px;font-family:inherit}
+.addrow:hover{border-color:#c1121f;color:#c1121f}
+.fs-lbl{display:flex;align-items:center;gap:3px;font-size:11px;color:#4a6a7a;cursor:pointer;white-space:nowrap;flex-shrink:0;user-select:none}
+.fs-lbl input[type=checkbox]{width:auto!important;accent-color:#2ea043;cursor:pointer}
+.time-input.fs-active{border-color:#2ea043!important;color:#7ee787!important;background:#081a0e!important}
+.dim{opacity:.35;pointer-events:none}
+.hint{font-size:10.5px;color:#3a5a7a;margin-top:3px}
+.pv-hdr{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#c1121f;margin-bottom:8px}
+.pv-meta{font-size:11px;color:#667;margin-bottom:4px;word-break:break-all}
+.pv-meta b{color:#aaa;font-weight:600}
+#pvbody,.pvbody{font-family:'Courier New',monospace;font-size:11.5px;white-space:pre-wrap;color:#b8c8d8;line-height:1.55;background:#0d1b2a;border:1px solid #0f3460;border-radius:6px;padding:12px;max-height:520px;overflow-y:auto;word-break:break-word}
+.sendbtn{display:block;width:100%;margin-top:10px;padding:11px;background:#c1121f;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit}
+.sendbtn:hover{background:#a00f1a}
+.cpybtn{display:block;width:100%;margin-top:5px;padding:8px;background:none;color:#4a6a8a;border:1px solid #0f3460;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
+.cpybtn:hover{border-color:#4a6a8a;color:#ccc}
+.tabs{display:flex;gap:2px;padding:8px 24px 0;background:#16213e;border-bottom:2px solid #0f3460}
+.tab-btn{padding:7px 18px;background:none;border:1px solid transparent;border-radius:6px 6px 0 0;border-bottom:none;color:#666;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:.04em;transition:all .15s}
+.tab-btn.active{background:#1a1a2e;color:#e0e0e0;border-color:#0f3460;margin-bottom:-2px}
+.tab-btn:hover:not(.active){color:#aaa}
+.tr-terr{display:flex;gap:5px;align-items:center;flex-shrink:0}
+.tr-terr label{display:flex;align-items:center;gap:2px;cursor:pointer;color:#aaa;font-size:11px}
+.tr-terr input[type=checkbox]{width:auto;accent-color:#c1121f}
+</style>
+</head>
+<body>
+<div class="hdr">
+  <div style="flex:1">
+    <h1>PAL Roadside Schedule Composer V2.0</h1>
+    <p>Pop-A-Lock of Northern NJ &mdash; tech names validated against the canonical Google Sheet</p>
+  </div>
+  <div style="font-size:11px;color:#7a8a9a;text-align:right" id="rosterBanner">Roster: not loaded &mdash; strict mode OFF</div>
+</div>
+<datalist id="techNames"></datalist>
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('schedule',this)">Schedule</button>
+  <button class="tab-btn" onclick="switchTab('avail',this)">Availability Update</button>
+  <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
+</div>
+<div id="scheduleTab">
+<div class="wrap">
+<div class="form">
+
+  <!-- SHIFT -->
+  <div class="card">
+    <div class="ct">Shift</div>
+    <div class="row">
+      <span class="lbl">Type</span>
+      <div class="rg">
+        <label><input type="radio" name="st" value="Morning" onchange="updateTP();upd()"> Morning</label>
+        <label><input type="radio" name="st" value="Night"   onchange="updateTP();upd()"> Night</label>
+      </div>
+    </div>
+    <div class="row">
+      <span class="lbl">Date</span>
+      <input type="text" id="dt" placeholder="4/29/2026" oninput="upd()" style="max-width:120px">
+    </div>
+  </div>
+
+  <div id="mainForm">
+  <!-- YOUR INFO -->
+  <div class="card">
+    <div class="ct">Your Info</div>
+    <div class="row">
+      <span class="lbl">Role</span>
+      <div class="rg">
+        <label><input type="radio" name="role" value="nav" onchange="upd()"> Shift Navigator</label>
+        <label><input type="radio" name="role" value="tic" onchange="upd()"> Tech in Charge</label>
+        <label><input type="radio" name="role" value="asm" onchange="upd()"> ASM / Navigator</label>
+      </div>
+    </div>
+    <div class="row"><span class="lbl">Name</span><input type="text" id="sName" placeholder="Philip Allan" oninput="upd()"></div>
+    <div class="row"><span class="lbl">Phone</span><input type="text" id="sPhone" placeholder="973-248-7153" oninput="upd()"></div>
+    <div class="row"><span class="lbl">Shift time</span><input type="text" id="sTime" class="time-input" placeholder="7am-7pm" oninput="timeEdit(this);upd()" style="max-width:105px"><label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label></div>
+    <div class="hint">Time format: 7am-7pm &nbsp;|&nbsp; 12pm-7pm &nbsp;|&nbsp; 7pm-7am &nbsp;(no spaces, lowercase am/pm)</div>
+  </div>
+
+  <!-- BACKUP MANAGER -->
+  <div class="card">
+    <div class="ct">Backup Manager</div>
+    <div id="bkF">
+      <div class="row"><span class="lbl">Name</span><input type="text" id="bkName" placeholder="Jason" oninput="upd()"></div>
+      <div class="row"><span class="lbl">Phone</span><input type="text" id="bkPhone" placeholder="862-774-1569" oninput="upd()"></div>
+      <div class="row"><span class="lbl">Shift time</span><input type="text" id="bkTime" class="time-input" placeholder="7am-7pm" oninput="timeEdit(this);upd()" style="max-width:105px"><label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label></div>
+    </div>
+  </div>
+
+  <!-- NORTHERN ZONES -->
+  <div class="card" id="nCard">
+    <div class="ct">Northern Zones
+      <label class="tog"><input type="checkbox" id="nTog" checked onchange="tog('n');compound();upd()"> Include</label>
+    </div>
+    <div id="nF">
+      <div class="row" style="margin-bottom:10px">
+        <span class="lbl">Header</span>
+        <div class="rg">
+          <label><input type="radio" name="nH" value="Northern Zones" checked onchange="compound();upd()"> Northern Zones</label>
+          <label><input type="radio" name="nH" value="Northern/Central Zones" onchange="compound();upd()"> Northern/Central (combined)</label>
+        </div>
+      </div>
+      <div id="nT"></div>
+      <button class="addrow" onclick="addRow('n')">+ Add tech</button>
+    </div>
+  </div>
+
+  <!-- CENTRAL ZONES -->
+  <div class="card" id="cCard">
+    <div class="ct">Central Zones
+      <label class="tog"><input type="checkbox" id="cTog" checked onchange="tog('c');compound();upd()"> Include</label>
+    </div>
+    <div id="cF">
+      <div class="row" style="margin-bottom:10px">
+        <span class="lbl">Header</span>
+        <div class="rg">
+          <label><input type="radio" name="cH" value="Central Zones" checked onchange="compound();upd()"> Central Zones</label>
+          <label><input type="radio" name="cH" value="Central/Southern Zones" onchange="compound();upd()"> Central/Southern (combined)</label>
+        </div>
+      </div>
+      <div id="cT"></div>
+      <button class="addrow" onclick="addRow('c')">+ Add tech</button>
+    </div>
+  </div>
+
+  <!-- SOUTHERN ZONES -->
+  <div class="card" id="sCard">
+    <div class="ct">Southern Zones
+      <label class="tog"><input type="checkbox" id="sTog" checked onchange="tog('s');upd()"> Include</label>
+    </div>
+    <div id="sF">
+      <div id="sT"></div>
+      <button class="addrow" onclick="addRow('s')">+ Add tech</button>
+    </div>
+  </div>
+
+  <!-- BATTERY TECHNICIANS -->
+  <div class="card">
+    <div class="ct">Battery Technicians
+      <label class="tog"><input type="checkbox" id="batTog" checked onchange="tog('bat');upd()"> Include</label>
+    </div>
+    <div id="batF">
+      <div id="batT"></div>
+      <button class="addrow" onclick="addRow('bat')">+ Add tech</button>
+    </div>
+  </div>
+
+
+  </div><!-- /mainForm -->
+
+
+</div><!-- /form -->
+
+<!-- PREVIEW -->
+<div class="right">
+  <div class="card" style="position:sticky;top:14px">
+    <div class="pv-hdr">Email Preview</div>
+    <div class="pv-meta">To: <b id="pvTo"></b></div>
+    <div class="pv-meta">Subject: <b id="pvSub"></b></div>
+    <div id="pvbody"></div>
+    <button class="sendbtn" onclick="openGmail()">&#9993; Open in Gmail</button>
+    <button class="cpybtn" onclick="copyBody()">Copy email body</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+</div><!-- /scheduleTab -->
+
+<div id="availTab" style="display:none">
+<div class="wrap">
+<div class="form">
+
+  <div class="card">
+    <div class="ct">Update Type</div>
+    <div class="row">
+      <div class="rg">
+        <label><input type="radio" name="availType" value="avail" checked onchange="setAvailType('avail')"> Availability Update</label>
+        <label><input type="radio" name="availType" value="tl" onchange="setAvailType('tl')"> Tech Late</label>
+        <label><input type="radio" name="availType" value="ncns" onchange="setAvailType('ncns')"> No Call / No Show</label>
+      </div>
+    </div>
+  </div>
+
+  <div id="availForm">
+  <div class="card">
+    <div class="ct">Tech Availability Update</div>
+    <div class="row">
+      <span class="lbl">Status</span>
+      <div class="rg">
+        <label><input type="radio" name="avStatus" value="UNAVAILABLE" checked onchange="updAvail()"> Unavailable</label>
+        <label><input type="radio" name="avStatus" value="AVAILABLE" onchange="updAvail()"> Available again</label>
+      </div>
+    </div>
+    <div class="row"><span class="lbl">Tech name</span><input type="text" list="techNames" id="avTech" placeholder="John Smith" oninput="updAvail()"></div>
+    <div class="row">
+      <span class="lbl">Territory</span>
+      <div class="rg">
+        <label><input type="checkbox" id="avTerrN" value="North"   onchange="updAvail()"> North</label>
+        <label><input type="checkbox" id="avTerrC" value="Central" onchange="updAvail()"> Central</label>
+        <label><input type="checkbox" id="avTerrS" value="South"   onchange="updAvail()"> South</label>
+      </div>
+    </div>
+    <div class="row" id="avRoleRow" style="display:none">
+      <span class="lbl">Role</span>
+      <div class="rg">
+        <label><input type="radio" name="avRole" value="rs" onchange="updAvail()"> RS Tech</label>
+        <label><input type="radio" name="avRole" value="battery_tech" onchange="updAvail()"> Battery Tech</label>
+        <label><input type="radio" name="avRole" value="battery_installer" onchange="updAvail()"> Battery Installer</label>
+        <label><input type="radio" name="avRole" value="locksmith" onchange="updAvail()"> Locksmith</label>
+      </div>
+    </div>
+    <div class="row"><span class="lbl">Shift start</span><input type="text" id="avTime" placeholder="10:30am" oninput="updAvail()" style="max-width:115px"></div>
+    <div class="row" id="avShiftEndRow" style="display:none"><span class="lbl">Shift end</span><input type="text" id="avShiftEnd" placeholder="7pm" oninput="updAvail()" style="max-width:115px"></div>
+    <div class="row" id="avReturnRow"><span class="lbl">Expected return</span><input type="text" id="avReturn" placeholder="2:30pm" oninput="updAvail()" style="max-width:115px"></div>
+    <div class="row"><span class="lbl">Reason</span><input type="text" id="avReason" placeholder="Car repair" oninput="updAvail()"></div>
+    <div class="hint" style="margin-top:8px">Use "Unavailable" when a tech goes off mid-shift. Use "Available again" when they return — or to add a new tech mid-shift (fill in Role and shift hours).</div>
+  </div>
+  </div>
+
+  <div id="tlPanel" style="display:none">
+    <div class="card">
+      <div class="ct">Tech Late &mdash; Updated Shift Times</div>
+      <div class="hint" style="margin-bottom:8px">Enter each late tech and their new shift window (e.g. 9am-7pm), or just the new start time (e.g. 9am) to keep the original end time.</div>
+      <div id="tlT"></div>
+      <button class="addrow" onclick="addTLRow()">+ Add tech</button>
+    </div>
+  </div>
+
+  <div id="ncnsPanel" style="display:none">
+    <div class="card">
+      <div class="ct">No Call / No Show</div>
+      <div class="hint" style="margin-bottom:8px">Enter each tech who did not show up. Only the name is used — the time field is optional.</div>
+      <div id="ncnsT"></div>
+      <button class="addrow" onclick="addNCNSRow()">+ Add tech</button>
+    </div>
+  </div>
+
+</div><!-- /form -->
+
+<div class="right">
+  <div class="card" style="position:sticky;top:14px">
+    <div class="pv-hdr">Email Preview</div>
+    <div class="pv-meta">To: <b id="avPvTo"></b></div>
+    <div class="pv-meta">Subject: <b id="avPvSub"></b></div>
+    <div id="avPvBody" class="pvbody"></div>
+    <button class="sendbtn" onclick="openAvailGmail()">&#9993; Open in Gmail</button>
+    <button class="cpybtn" id="avCpyBtn" onclick="copyAvailBody()">Copy email body</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+</div><!-- /availTab -->
+
+<!-- ─────────── Settings tab ─────────── -->
+<div id="settingsTab" style="display:none">
+<div class="wrap">
+<div class="form" style="max-width:900px">
+  <div class="card">
+    <div class="ct">Roster Google Sheet (shared with Scores Composer)</div>
+    <div class="row">
+      <span class="lbl">CSV URL</span>
+      <input type="text" id="sheetUrl" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?...&amp;output=csv" oninput="saveSheetUrl()">
+    </div>
+    <div class="row">
+      <span class="lbl">Editor URL</span>
+      <input type="text" id="editorUrl" placeholder="https://docs.google.com/spreadsheets/d/{sheet-id}/edit (optional)" oninput="saveEditorUrl()">
+    </div>
+    <div class="row" style="margin-top:6px;gap:8px">
+      <span class="lbl">&nbsp;</span>
+      <button class="cpybtn" style="width:auto;margin:0;padding:6px 14px" onclick="refreshFromSheet()">Refresh from Sheet</button>
+      <button class="cpybtn" style="width:auto;margin:0;padding:6px 14px" onclick="openEditorUrl()">Edit in Google Sheets</button>
+    </div>
+    <div class="hint" id="sheetStatus" style="margin-top:8px;color:#7a8a9a">Roster not loaded yet.</div>
+    <div class="hint" style="margin-top:10px">Both the Schedule Composer and the Scores Composer read the same Sheet so tech names stay consistent. The CSV URL comes from File &rarr; Share &rarr; Publish to web &rarr; CSV. The Editor URL is whatever's in your address bar while editing the sheet. URLs are saved in this browser's localStorage.</div>
+    <div class="hint warn" style="margin-top:10px;color:#e8a020"><b>Strict mode:</b> when a roster is loaded, the Open in Gmail buttons refuse to send if any tech name doesn't match a canonical name or alias on the sheet. A popup explains exactly which names are unknown. Add new techs to the Sheet first, click Refresh, then try again.</div>
+  </div>
+  <div class="card">
+    <div class="ct">Current Roster &mdash; <span id="rosterCount">0</span> techs</div>
+    <div id="rosterList" style="font-size:12px;color:#b8c8d8;line-height:1.6"></div>
+  </div>
+</div>
+</div><!-- /wrap -->
+</div><!-- /settingsTab -->
+
+<script>
+history.scrollRestoration = 'manual';
+const FIXED = ['palautonav@gmail.com','palnnjpay@gmail.com','jason.oppenberg@popalocknj.com','Philip.Allan@PopALockNJ.com','help@houston-dispatch.com'];
+const DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+let rowCtr  = 0;
+let tlCtr   = 0, ncnsCtr = 0;
+
+// ── Tech rows ────────────────────────────────────────────────────────────────
+function addRow(z) {
+  const id = 'r' + (++rowCtr);
+  const d = document.createElement('div');
+  d.className = 'tr'; d.id = id;
+  const dt = defaultTime();
+  d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="upd()" data-z="${z}">` +
+                `<input type="text" class="time-input" placeholder="${dt}" oninput="timeEdit(this);upd()">` +
+                `<label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label>` +
+                `<button class="rm" onclick="document.getElementById('${id}').remove();upd()" title="Remove">&times;</button>`;
+  document.getElementById(z + 'T').appendChild(d);
+  d.querySelector('input').focus();
+  upd();
+}
+
+function getTechs(z) {
+  return [...document.querySelectorAll(`#${z}T .tr`)].map(r => {
+    const ins = r.querySelectorAll('input[type=text]');
+    return { name: ins[0].value.trim(), time: ins[1].value.replace(/[()]/g,'').trim() };
+  }).filter(t => t.name);
+}
+
+// ── Tech Late rows ───────────────────────────────────────────────────────────
+function addTLRow() {
+  const id = 'tl' + (++tlCtr);
+  const d = document.createElement('div');
+  d.className = 'tr'; d.id = id;
+  const dt = defaultTime();
+  d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="updAvail()">` +
+                `<input type="text" class="time-input" placeholder="${dt}" oninput="timeEdit(this);updAvail()">` +
+                `<label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label>` +
+                `<span class="tr-terr">` +
+                  `<label><input type="checkbox" class="tl-zone" value="North"   onchange="updAvail()"> N</label>` +
+                  `<label><input type="checkbox" class="tl-zone" value="Central" onchange="updAvail()"> C</label>` +
+                  `<label><input type="checkbox" class="tl-zone" value="South"   onchange="updAvail()"> S</label>` +
+                `</span>` +
+                `<button class="rm" onclick="document.getElementById('${id}').remove();updAvail()" title="Remove">&times;</button>`;
+  document.getElementById('tlT').appendChild(d);
+  d.querySelector('input').focus();
+  updAvail();
+}
+
+function getTLTechs() {
+  return [...document.querySelectorAll('#tlT .tr')].map(r => {
+    const ins      = r.querySelectorAll('input[type=text]');
+    const checked  = [...r.querySelectorAll('.tl-zone:checked')].map(cb => cb.value);
+    const territory = checked.join(', ');
+    return { name: ins[0].value.trim(), time: ins[1].value.replace(/[()]/g,'').trim(), territory };
+  }).filter(t => t.name);
+}
+
+// ── No Call / No Show rows ───────────────────────────────────────────────────
+function addNCNSRow() {
+  const id = 'nc' + (++ncnsCtr);
+  const d = document.createElement('div');
+  d.className = 'tr'; d.id = id;
+  const dt = defaultTime();
+  d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="updAvail()">` +
+                `<input type="text" class="time-input" placeholder="${dt}" oninput="timeEdit(this);updAvail()">` +
+                `<label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label>` +
+                `<button class="rm" onclick="document.getElementById('${id}').remove();updAvail()" title="Remove">&times;</button>`;
+  document.getElementById('ncnsT').appendChild(d);
+  d.querySelector('input').focus();
+  updAvail();
+}
+
+function getNCNSTechs() {
+  return [...document.querySelectorAll('#ncnsT .tr')].map(r => {
+    const ins = r.querySelectorAll('input[type=text]');
+    return { name: ins[0].value.trim(), time: ins[1].value.replace(/[()]/g,'').trim() };
+  }).filter(t => t.name);
+}
+
+
+// ── Toggle section ───────────────────────────────────────────────────────────
+function tog(z) {
+  const on = document.getElementById(z + 'Tog').checked;
+  document.getElementById(z + 'F').classList.toggle('dim', !on);
+}
+
+// ── Compound zone logic ──────────────────────────────────────────────────────
+function compound() {
+  const nOn  = document.getElementById('nTog').checked;
+  const nVal = radio('nH');
+  const cOn  = document.getElementById('cTog').checked;
+  const cVal = radio('cH');
+
+  const nc = nOn && nVal === 'Northern/Central Zones';
+  const cs = cOn && cVal === 'Central/Southern Zones';
+
+  document.getElementById('cCard').classList.toggle('dim', nc);
+  if (nc) { document.getElementById('cTog').checked = false; document.getElementById('cF').classList.add('dim'); }
+
+  document.getElementById('sCard').classList.toggle('dim', cs);
+  if (cs) { document.getElementById('sTog').checked = false; document.getElementById('sF').classList.add('dim'); }
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function radio(n) { const el = document.querySelector(`input[name="${n}"]:checked`); return el ? el.value : ''; }
+function v(id)    { return (document.getElementById(id)?.value || '').trim(); }
+
+function fmtDate(d) { return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`; }
+function dayName(s) {
+  const p = s.split('/');
+  if (p.length !== 3) return '';
+  const d = new Date(+p[2], +p[0]-1, +p[1]);
+  return isNaN(d) ? '' : DAYS[d.getDay()];
+}
+
+// ── Special email builders ───────────────────────────────────────────────────
+function buildTLBody() {
+  const dt    = v('dt');
+  const techs = getTLTechs();
+  if (!techs.length) return `Tech Late ${dt}\n\n(no techs entered)`;
+  const lines = techs.map(t => {
+    let line = t.time ? `${t.name} (${t.time})` : t.name;
+    if (t.territory) line += ` ${t.territory}`;
+    return line;
+  }).join('\n');
+  return `Tech Late ${dt}\n\n${lines}`;
+}
+
+function buildNCNSBody() {
+  const dt    = v('dt');
+  const techs = getNCNSTechs();
+  if (!techs.length) return `No Call No Show ${dt}\n\n(no techs entered)`;
+  const lines = techs.map(t => t.time ? `${t.name} (${t.time})` : t.name).join('\n');
+  return `No Call No Show ${dt}\n\n${lines}\n\nIs to be removed from the schedule.`;
+}
+
+// ── Email builder ────────────────────────────────────────────────────────────
+function buildBody() {
+  const st    = radio('st') || 'Morning';
+  const role  = radio('role') || 'nav';
+  const dt    = v('dt');
+  const sName = v('sName');
+  const sPh   = v('sPhone');
+  const sTime = v('sTime').replace(/[()]/g,'').trim();
+
+  const ROLES = {
+    nav: { pfx:'SHIFT NAVIGATOR', title:'Shift Navigator',  intro:'navigator'      },
+    tic: { pfx:'TECH IN CHARGE',  title:'Tech in Charge',   intro:'tech in charge' },
+    asm: { pfx:'ASM / Navigator', title:'ASM / Navigator',  intro:'navigator'      }
+  };
+  const { pfx, title, intro } = ROLES[role];
+
+  const word    = st === 'Morning' ? 'today'   : 'tonight';
+  const greet   = st === 'Morning' ? 'morning' : 'evening';
+  const respond = st === 'Morning'
+    ? 'Please respond to this e-mail within 15 minutes of the start of your shift.'
+    : 'Please respond to this e-mail by 6:45pm.';
+
+  const ph   = sPh   ? ` ${sPh}`      : '';
+  const tm   = sTime ? ` (${sTime})`  : '';
+
+  const secs = [];
+
+  // Intro
+  secs.push([
+    `${st} Roadside Schedule ${dt}`,
+    '',
+    `Good ${greet},`,
+    '',
+    `I will be your ${intro} ${word}. ${respond}`,
+    '',
+    'Please restart your phone and log back into Pulsar before the start of your shift.'
+  ].join('\n'));
+
+  // Role line + optional backup
+  let roleBlk = `${pfx}: ${sName}${ph}${tm}`;
+  const bkNm = v('bkName');
+  const bkPh = v('bkPhone');
+  const bkTm = v('bkTime').replace(/[()]/g,'').trim();
+  if (bkNm) {
+    roleBlk += `\n\nBackup Manager: ${bkNm}${bkPh ? ' ' + bkPh : ''}${bkTm ? ' (' + bkTm + ')' : ''}`;
+  }
+  secs.push(roleBlk);
+
+  // Zone helper
+  function zone(on, hdr, z) {
+    if (!on) return;
+    const techs = getTechs(z);
+    if (!techs.length) return;
+    const lines = techs.map(t => t.time ? `${t.name} (${t.time})` : t.name).join('\n');
+    secs.push(`${hdr}:\n\n${lines}`);
+  }
+
+  zone(document.getElementById('nTog').checked,   radio('nH') || 'Northern Zones',  'n');
+  zone(document.getElementById('cTog').checked,   radio('cH') || 'Central Zones',   'c');
+  zone(document.getElementById('sTog').checked,   'Southern Zones',                 's');
+  zone(document.getElementById('batTog').checked, 'Battery Technicians',            'bat');
+
+  // Sign-off
+  const soLines = ['Stay safe and have a great shift.', '', sName, title, 'Pop-A-Lock of Northern NJ'];
+  if (sPh) soLines.push(sPh);
+  secs.push(soLines.join('\n'));
+
+  return secs.join('\n\n\n');
+}
+
+function buildSubject() {
+  const st = radio('st') || 'Morning';
+  const dt = v('dt');
+  const dn = dayName(dt);
+  const sfx = st === 'Morning'
+    ? 'please respond within 15 minutes of the start of your shift'
+    : 'please respond by 6:45pm';
+  return `${dn ? dn + ' ' : ''}${st} Roadside Schedule ${dt} - ${sfx}`;
+}
+
+function allRecipients() {
+  return [...FIXED];
+}
+
+// ── Full-shift helpers ───────────────────────────────────────────────────────
+function defaultTime() { return radio('st') === 'Morning' ? '7am-7pm' : '7pm-7am'; }
+
+function toggleFS(cb) {
+  const inp = cb.closest('.fs-lbl').previousElementSibling;
+  if (cb.checked) { inp.value = defaultTime(); inp.classList.add('fs-active'); }
+  else            { inp.value = '';            inp.classList.remove('fs-active'); }
+  upd();
+}
+
+function timeEdit(inp) {
+  const lbl = inp.nextElementSibling;
+  if (lbl && lbl.classList.contains('fs-lbl')) {
+    const cb = lbl.querySelector('.fs-cb');
+    if (cb && inp.value !== defaultTime()) { cb.checked = false; inp.classList.remove('fs-active'); }
+  }
+}
+
+function updateTP() {
+  const dt = defaultTime();
+  document.querySelectorAll('.time-input').forEach(inp => {
+    inp.placeholder = dt;
+    const lbl = inp.nextElementSibling;
+    if (lbl && lbl.classList.contains('fs-lbl')) {
+      const cb = lbl.querySelector('.fs-cb');
+      if (cb && cb.checked) { inp.value = dt; }
+    }
+  });
+}
+
+// ── UI update ────────────────────────────────────────────────────────────────
+function upd() {
+  document.getElementById('pvbody').textContent = buildBody();
+  document.getElementById('pvSub').textContent  = buildSubject();
+  document.getElementById('pvTo').textContent   = allRecipients().join(', ');
+}
+
+// ── Actions ──────────────────────────────────────────────────────────────────
+function openGmail() {
+  const unknowns = collectUnknowns(scheduleTechInputs());
+  if (unknowns.length) { showUnknownsAlert(unknowns, 'Schedule'); return; }
+  const url = 'https://mail.google.com/mail/?view=cm&fs=1'
+    + '&to='   + encodeURIComponent(allRecipients().join(','))
+    + '&su='   + encodeURIComponent(buildSubject())
+    + '&body=' + encodeURIComponent(buildBody());
+  window.open(url, '_blank');
+}
+
+function copyBody() {
+  navigator.clipboard.writeText(buildBody()).then(() => {
+    const b = document.querySelector('.cpybtn');
+    b.textContent = 'Copied!';
+    setTimeout(() => b.textContent = 'Copy email body', 1800);
+  });
+}
+
+// ── Enter-key navigation ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || (e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT')) return;
+  e.preventDefault();
+  const all = [...document.querySelectorAll('input[type=text]:not([disabled])')].filter(
+    el => !el.closest('.dim')
+  );
+  const i = all.indexOf(e.target);
+  if (i >= 0 && i < all.length - 1) all[i + 1].focus();
+  else if (i === all.length - 1) openGmail();
+});
+
+// ── Availability Update tab ──────────────────────────────────────────────────
+let availType = 'avail';
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('scheduleTab').style.display = tab === 'schedule' ? '' : 'none';
+  document.getElementById('availTab').style.display    = tab === 'avail'    ? '' : 'none';
+  document.getElementById('settingsTab').style.display = tab === 'settings' ? '' : 'none';
+  if (tab === 'avail') updAvail();
+  if (tab === 'settings') renderSettings();
+  window.scrollTo(0, 0);
+}
+
+function setAvailType(mode) {
+  availType = mode;
+  document.getElementById('availForm').style.display  = mode === 'avail' ? '' : 'none';
+  document.getElementById('tlPanel').style.display    = mode === 'tl'    ? '' : 'none';
+  document.getElementById('ncnsPanel').style.display  = mode === 'ncns'  ? '' : 'none';
+  if (mode === 'tl'   && !document.querySelector('#tlT .tr'))   addTLRow();
+  if (mode === 'ncns' && !document.querySelector('#ncnsT .tr')) addNCNSRow();
+  updAvail();
+}
+
+function radioAvail() {
+  const el = document.querySelector('input[name="avStatus"]:checked');
+  return el ? el.value : 'UNAVAILABLE';
+}
+
+function getSelectedTerritories() {
+  const vals = ['avTerrN','avTerrC','avTerrS']
+    .filter(id => document.getElementById(id)?.checked)
+    .map(id => document.getElementById(id).value);
+  return vals.join(', ');
+}
+
+function buildAvailSubject() {
+  if (availType === 'tl')   return 'Tech Late';
+  if (availType === 'ncns') return 'No Call No Show';
+  const tech   = v('avTech') || 'Tech';
+  const status = radioAvail();
+  const dt     = v('dt');
+  return `Tech Availability Update - ${status} - ${tech} - ${dt}`;
+}
+
+function buildAvailBody() {
+  if (availType === 'tl')   return buildTLBody();
+  if (availType === 'ncns') return buildNCNSBody();
+  const tech      = v('avTech');
+  const status    = radioAvail();
+  const territory = getSelectedTerritories();
+  const time      = v('avTime');
+  const shiftEnd  = v('avShiftEnd');
+  const ret       = v('avReturn');
+  const reason    = v('avReason');
+  const roleEl    = document.querySelector('input[name="avRole"]:checked');
+  const lines  = [
+    'TECH AVAILABILITY UPDATE',
+    '',
+    `Tech: ${tech || '(enter name)'}`,
+    `Status: ${status}`,
+  ];
+  if (territory)                              lines.push(`Territory: ${territory}`);
+  if (status === 'AVAILABLE' && roleEl)       lines.push(`Role: ${roleEl.value}`);
+  if (time)                                   lines.push(`Effective: ${time}`);
+  if (status === 'AVAILABLE' && shiftEnd)     lines.push(`Shift End: ${shiftEnd}`);
+  if (reason)                                 lines.push(`Reason: ${reason}`);
+  if (status === 'UNAVAILABLE' && ret)        lines.push(`Expected Return: ${ret}`);
+  return lines.join('\n');
+}
+
+function updAvail() {
+  document.getElementById('avPvBody').textContent = buildAvailBody();
+  document.getElementById('avPvSub').textContent  = buildAvailSubject();
+  document.getElementById('avPvTo').textContent   = allRecipients().join(', ');
+  if (availType === 'avail') {
+    const isAvail = radioAvail() === 'AVAILABLE';
+    document.getElementById('avReturnRow').style.display  = isAvail ? 'none' : '';
+    document.getElementById('avRoleRow').style.display     = isAvail ? ''     : 'none';
+    document.getElementById('avShiftEndRow').style.display = isAvail ? ''     : 'none';
+  }
+}
+
+function openAvailGmail() {
+  // Validate the tech name(s) for whichever availability mode is active.
+  let inputs, kindLabel;
+  if (availType === 'tl') {
+    inputs = tlTechInputs(); kindLabel = 'Tech Late';
+  } else if (availType === 'ncns') {
+    inputs = ncnsTechInputs(); kindLabel = 'No Call / No Show';
+  } else {
+    inputs = [document.getElementById('avTech')]; kindLabel = 'Tech Availability Update';
+  }
+  const unknowns = collectUnknowns(inputs);
+  if (unknowns.length) { showUnknownsAlert(unknowns, kindLabel); return; }
+  const url = 'https://mail.google.com/mail/?view=cm&fs=1'
+    + '&to='   + encodeURIComponent(allRecipients().join(','))
+    + '&su='   + encodeURIComponent(buildAvailSubject())
+    + '&body=' + encodeURIComponent(buildAvailBody());
+  window.open(url, '_blank');
+}
+
+function copyAvailBody() {
+  navigator.clipboard.writeText(buildAvailBody()).then(() => {
+    const b = document.getElementById('avCpyBtn');
+    b.textContent = 'Copied!';
+    setTimeout(() => b.textContent = 'Copy email body', 1800);
+  });
+}
+
+// ── Roster sheet integration ─────────────────────────────────────────────────
+// V2: direct fetch of the published-CSV URL.  Google publishes Sheets with
+// Access-Control-Allow-Origin: *, so CORS works from any HTTPS origin.  No
+// localhost proxy needed.
+const KEY_SHEET  = 'pal_scores_sheet';
+const KEY_EDITOR = 'pal_scores_editor';
+let roster = [];   // [{name, role, aliases:[]}]  loaded from the Sheet
+
+function saveSheetUrl()  { localStorage.setItem(KEY_SHEET,  document.getElementById('sheetUrl').value.trim()); }
+function saveEditorUrl() { localStorage.setItem(KEY_EDITOR, document.getElementById('editorUrl').value.trim()); }
+
+function loadSheetState() {
+  document.getElementById('sheetUrl').value  = localStorage.getItem(KEY_SHEET)  || '';
+  document.getElementById('editorUrl').value = localStorage.getItem(KEY_EDITOR) || '';
+}
+
+async function refreshFromSheet() {
+  saveSheetUrl();
+  const url = document.getElementById('sheetUrl').value.trim();
+  const status = document.getElementById('sheetStatus');
+  if (!url) {
+    status.textContent = 'Paste a CSV URL above first.';
+    roster = [];
+    syncDatalist();
+    updateRosterBanner();
+    renderSettings();
+    return;
+  }
+  status.textContent = 'Fetching ...';
+  try {
+    const resp = await fetch(url, {cache: 'no-store'});
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '');
+      throw new Error(`HTTP ${resp.status}${detail ? ' — ' + detail.slice(0, 200) : ''}`);
+    }
+    const csv = await resp.text();
+    const parsed = parseCsv(csv);
+    if (!parsed.length) {
+      status.textContent = 'Sheet returned no usable rows. Check that the header is Canonical Name,Role,Aliases.';
+      return;
+    }
+    roster = parsed;
+    syncDatalist();
+    updateRosterBanner();
+    renderSettings();
+    status.textContent = `Loaded ${roster.length} techs from Sheet at ${new Date().toLocaleTimeString()}.`;
+  } catch (err) {
+    status.textContent = `Fetch failed: ${err.message}. Check the CSV URL and your network connection.`;
+    console.error(err);
+  }
+}
+
+function openEditorUrl() {
+  const explicit = document.getElementById('editorUrl').value.trim();
+  if (explicit) { window.open(explicit, '_blank'); return; }
+  const csv = document.getElementById('sheetUrl').value.trim();
+  const m = csv.match(/\/spreadsheets\/d\/(?!e\/)([^\/?#]+)/);
+  if (m) { window.open(`https://docs.google.com/spreadsheets/d/${m[1]}/edit`, '_blank'); return; }
+  window.open('https://docs.google.com/spreadsheets/', '_blank');
+}
+
+// Minimal CSV parser — handles quoted fields and embedded commas.
+function parseCsv(text) {
+  const rows = []; let row = [], field = '', inQuote = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuote) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQuote = false;
+      else field += c;
+    } else {
+      if (c === '"') inQuote = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i+1] === '\n') i++;
+        row.push(field); field = '';
+        if (row.some(v => v.trim())) rows.push(row);
+        row = [];
+      } else field += c;
+    }
+  }
+  if (field || row.length) { row.push(field); if (row.some(v => v.trim())) rows.push(row); }
+  if (rows.length < 2) return [];
+  const header = rows[0].map(h => h.trim().toLowerCase());
+  const ixName    = header.findIndex(h => h.includes('name'));
+  const ixRole    = header.findIndex(h => h.includes('role'));
+  const ixAliases = header.findIndex(h => h.includes('alias'));
+  if (ixName < 0) return [];
+  const out = [];
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    const name = (r[ixName] || '').trim();
+    if (!name) continue;
+    const role = ixRole >= 0 ? (r[ixRole] || '').trim().toLowerCase() : 'road';
+    const aliases = ixAliases >= 0
+      ? (r[ixAliases] || '').split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+    out.push({name, role: role === 'battery' ? 'battery' : 'road', aliases});
+  }
+  return out;
+}
+
+// Populate the <datalist> so every tech-name <input list="techNames"> gets
+// autocomplete.  Includes both canonical names and aliases so Tom can type
+// what feels natural and still pass validation.
+function syncDatalist() {
+  const dl = document.getElementById('techNames');
+  dl.innerHTML = '';
+  const seen = new Set();
+  for (const t of roster) {
+    if (!seen.has(t.name.toLowerCase())) {
+      seen.add(t.name.toLowerCase());
+      const opt = document.createElement('option');
+      opt.value = t.name;
+      dl.appendChild(opt);
+    }
+    for (const a of (t.aliases || [])) {
+      const al = a.toLowerCase();
+      if (!seen.has(al)) {
+        seen.add(al);
+        const opt = document.createElement('option');
+        opt.value = a;
+        dl.appendChild(opt);
+      }
+    }
+  }
+}
+
+function updateRosterBanner() {
+  const banner = document.getElementById('rosterBanner');
+  if (!roster.length) {
+    banner.textContent = 'Roster: not loaded — strict mode OFF';
+    banner.style.color = '#7a8a9a';
+  } else {
+    banner.textContent = `Roster: ${roster.length} techs — strict mode ON`;
+    banner.style.color = '#2ea043';
+  }
+}
+
+function renderSettings() {
+  document.getElementById('rosterCount').textContent = roster.length;
+  const list = document.getElementById('rosterList');
+  if (!roster.length) {
+    list.innerHTML = '<i style="color:#5a6a7a">No roster loaded. Paste the CSV URL above and click Refresh from Sheet.</i>';
+    return;
+  }
+  list.innerHTML = '';
+  for (const t of roster) {
+    const aliases = (t.aliases || []).join(', ');
+    const row = document.createElement('div');
+    row.innerHTML = `<span style="display:inline-block;min-width:200px"><b>${escapeHtml(t.name)}</b></span>`
+      + `<span style="display:inline-block;min-width:80px;color:#7a8a9a">${escapeHtml(t.role)}</span>`
+      + (aliases ? `<span style="color:#7a8a9a">${escapeHtml(aliases)}</span>` : '');
+    list.appendChild(row);
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ── Validation: refuse to send if any tech name is unknown ───────────────────
+function isKnownName(name) {
+  const nl = name.trim().toLowerCase();
+  if (!nl) return true;        // empty = ignored, not unknown
+  if (!roster.length) return true;  // no roster loaded = permissive (strict mode OFF)
+  for (const t of roster) {
+    if (t.name.toLowerCase() === nl) return true;
+    for (const a of (t.aliases || [])) {
+      if (a.toLowerCase() === nl) return true;
+    }
+  }
+  return false;
+}
+
+function collectUnknowns(inputs) {
+  const seen = new Set();
+  const out = [];
+  for (const inp of inputs) {
+    const v = (inp.value || '').trim();
+    if (!v) continue;
+    if (isKnownName(v)) continue;
+    const key = v.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(v);
+  }
+  return out;
+}
+
+function showUnknownsAlert(unknowns, kind) {
+  const lines = [
+    `CANNOT SEND — ${unknowns.length} tech name${unknowns.length > 1 ? 's' : ''} not on the canonical roster:`,
+    '',
+    ...unknowns.map(n => `   •  ${n}`),
+    '',
+    'These names are not on the Google Sheet, nor on any alias list for a tech on the Sheet.',
+    '',
+    'How to fix:',
+    '  1. Check spelling — autocomplete suggests valid names as you type.',
+    '  2. If a name is correct but new (a tech added since you last refreshed),',
+    '     open the Settings tab, click Refresh from Sheet, then try sending again.',
+    '  3. If the tech is truly new and not yet on the Sheet, add them there first',
+    '     (Canonical Name / Role / Aliases), refresh, then try sending again.',
+    '',
+    `The ${kind} email was NOT opened. Nothing has been sent.`,
+  ];
+  alert(lines.join('\n'));
+}
+
+function scheduleTechInputs() {
+  // All zone rows have inputs marked with data-z.  Skips Your Info (sName) and
+  // Backup Manager (bkName) — navigators aren't on the techs sheet.
+  return [...document.querySelectorAll('input[type=text][data-z]')];
+}
+
+function tlTechInputs()    { return [...document.querySelectorAll('#tlT .tr input[type=text]:first-child')]; }
+function ncnsTechInputs()  { return [...document.querySelectorAll('#ncnsT .tr input[type=text]:first-child')]; }
+
+// ── Init ─────────────────────────────────────────────────────────────────────
+(function init() {
+  const h = new Date().getHours();
+  const st = h < 12 ? 'Morning' : 'Night';
+  document.querySelector(`input[name="st"][value="${st}"]`).checked  = true;
+  document.querySelector('input[name="role"][value="nav"]').checked  = true;
+  document.getElementById('dt').value = fmtDate(new Date());
+
+  // Seed one row per active zone
+  addRow('n'); addRow('c'); addRow('c'); addRow('s'); addRow('bat');
+
+  updateTP();  // set placeholders to match detected shift type
+  upd();
+
+  // Roster sheet — load URLs from localStorage, attempt fetch if set
+  loadSheetState();
+  updateRosterBanner();
+  if (localStorage.getItem(KEY_SHEET)) {
+    refreshFromSheet();
+  }
+})();
+window.addEventListener('load', () => window.scrollTo(0, 0));
+</script>
+</body>
+</html>
