@@ -5,12 +5,13 @@
 // CSV, Gmail compose URL).  Bump CACHE_NAME any time the app shell
 // asset list or any cached asset's content changes.
 
-const CACHE_NAME = 'pal-composer-shell-v1';
+const CACHE_NAME = 'pal-composer-shell-v2';
 const APP_SHELL = [
   './',
   './index.html',
   './manifest.webmanifest',
   './icons/icon.svg',
+  './favicon.ico',
 ];
 
 self.addEventListener('install', event => {
