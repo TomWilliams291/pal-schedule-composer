@@ -37,6 +37,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 .tr{display:flex;gap:6px;margin-bottom:5px;align-items:center}
 .tr input:nth-child(1){flex:2}
 .tr input:nth-child(2){flex:1;min-width:76px}
+.tr .time-select{flex:1;min-width:110px;width:auto}
 .rm{background:none;border:none;color:#3a5a7a;cursor:pointer;font-size:16px;padding:2px 5px;line-height:1;border-radius:3px;flex-shrink:0}
 .rm:hover{color:#c1121f}
 .addrow{background:none;border:1px dashed #1a3050;color:#4a6a8a;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:4px;width:100%;text-align:left;margin-top:2px;font-family:inherit}
@@ -112,8 +113,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     </div>
     <div class="row"><span class="lbl">Name</span><input type="text" id="sName" placeholder="Philip Allan" oninput="upd()"></div>
     <div class="row"><span class="lbl">Phone</span><input type="text" id="sPhone" placeholder="973-248-7153" oninput="upd()"></div>
-    <div class="row"><span class="lbl">Shift time</span><input type="text" id="sTime" class="time-input" placeholder="7am-7pm" oninput="timeEdit(this);upd()" style="max-width:105px"><label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label></div>
-    <div class="hint">Time format: 7am-7pm &nbsp;|&nbsp; 12pm-7pm &nbsp;|&nbsp; 7pm-7am &nbsp;(no spaces, lowercase am/pm)</div>
+    <div class="row"><span class="lbl">Shift time</span><select id="sTime" class="time-select" onchange="upd()" style="max-width:150px"></select></div>
   </div>
 
   <!-- BACKUP MANAGER -->
@@ -122,7 +122,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div id="bkF">
       <div class="row"><span class="lbl">Name</span><input type="text" id="bkName" placeholder="Jason" oninput="upd()"></div>
       <div class="row"><span class="lbl">Phone</span><input type="text" id="bkPhone" placeholder="862-774-1569" oninput="upd()"></div>
-      <div class="row"><span class="lbl">Shift time</span><input type="text" id="bkTime" class="time-input" placeholder="7am-7pm" oninput="timeEdit(this);upd()" style="max-width:105px"><label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label></div>
+      <div class="row"><span class="lbl">Shift time</span><select id="bkTime" class="time-select" onchange="upd()" style="max-width:150px"></select></div>
     </div>
   </div>
 
@@ -354,12 +354,11 @@ function addRow(z, focusNew) {
   const id = 'r' + (++rowCtr);
   const d = document.createElement('div');
   d.className = 'tr'; d.id = id;
-  const dt = defaultTime();
   d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="upd()" data-z="${z}">` +
-                `<input type="text" class="time-input" placeholder="${dt}" oninput="timeEdit(this);upd()">` +
-                `<label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label>` +
+                `<select class="time-select" onchange="upd()"></select>` +
                 `<button class="rm" onclick="document.getElementById('${id}').remove();upd()" title="Remove">&times;</button>`;
   document.getElementById(z + 'T').appendChild(d);
+  populateTimeSelect(d.querySelector('.time-select'));
   // Only focus when the user clicked + Add tech.  During init seeding the
   // focus would scroll the page down to the last-seeded row (Battery
   // Technicians), forcing the user to scroll back up before starting.
@@ -369,8 +368,9 @@ function addRow(z, focusNew) {
 
 function getTechs(z) {
   return [...document.querySelectorAll(`#${z}T .tr`)].map(r => {
-    const ins = r.querySelectorAll('input[type=text]');
-    return { name: ins[0].value.trim(), time: ins[1].value.replace(/[()]/g,'').trim() };
+    const nameInp = r.querySelector('input[type=text]');
+    const timeSel = r.querySelector('.time-select');
+    return { name: nameInp.value.trim(), time: timeSel ? timeSel.value : '' };
   }).filter(t => t.name);
 }
 
@@ -569,6 +569,28 @@ function allRecipients() {
 // ── Full-shift helpers ───────────────────────────────────────────────────────
 function defaultTime() { return radio('st') === 'Morning' ? '7am-7pm' : '7pm-7am'; }
 
+// ── Shift-time dropdowns (Schedule tab) ─────────────────────────────────────
+const SHIFT_TIMES = {
+  Morning: ['7am-7pm', '9am-7pm', '12pm-7pm', '4pm-7pm'],
+  Night:   ['7pm-7am', '7pm-10pm', '7pm-12am', '6am-7am']
+};
+
+function shiftTimeOptions() {
+  return SHIFT_TIMES[radio('st') || 'Morning'];
+}
+
+function populateTimeSelect(sel) {
+  const current = sel.value;
+  const opts = shiftTimeOptions();
+  sel.innerHTML = '';
+  for (const t of opts) {
+    const o = document.createElement('option');
+    o.value = t; o.textContent = t;
+    sel.appendChild(o);
+  }
+  if (opts.includes(current)) sel.value = current;
+}
+
 function toggleFS(cb) {
   const inp = cb.closest('.fs-lbl').previousElementSibling;
   if (cb.checked) { inp.value = defaultTime(); inp.classList.add('fs-active'); }
@@ -586,6 +608,7 @@ function timeEdit(inp) {
 
 function updateTP() {
   const dt = defaultTime();
+  // Availability-tab text inputs: update placeholders + full-shift values
   document.querySelectorAll('.time-input').forEach(inp => {
     inp.placeholder = dt;
     const lbl = inp.nextElementSibling;
@@ -594,6 +617,8 @@ function updateTP() {
       if (cb && cb.checked) { inp.value = dt; }
     }
   });
+  // Schedule-tab dropdowns: repopulate with correct shift-type options
+  document.querySelectorAll('.time-select').forEach(populateTimeSelect);
 }
 
 // ── UI update ────────────────────────────────────────────────────────────────
