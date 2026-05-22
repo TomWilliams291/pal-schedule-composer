@@ -763,6 +763,14 @@ const KEY_SHEET  = 'pal_scores_sheet';
 const KEY_EDITOR = 'pal_scores_editor';
 const KEY_ROSTER_CACHE = 'pal_roster_cache';
 const KEY_OUTBOX = 'pal_outbox';
+
+// Pre-filled CSV URL so navigators don't have to paste it on first visit.
+// Used only when localStorage has no value yet — once a navigator clicks
+// Refresh from Sheet successfully, their localStorage takes over.  If the
+// canonical Sheet's publish URL ever changes, edit this constant, bump
+// CACHE_NAME in sw.js so browsers pick up the new HTML, and push.
+const DEFAULT_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTTSXCdYPwNYo60yA4rACSrdX3jTb-bL2TVz5Zvq6z4dTEB3ZzRajGKetdKEwhfWZc_J8ufN2K7jACe/pub?gid=831374063&single=true&output=csv';
+
 let roster = [];   // [{name, role, aliases:[]}]  loaded from the Sheet
 let rosterFetchedAt = null;
 let rosterFromCache = false;
@@ -771,7 +779,7 @@ function saveSheetUrl()  { localStorage.setItem(KEY_SHEET,  document.getElementB
 function saveEditorUrl() { localStorage.setItem(KEY_EDITOR, document.getElementById('editorUrl').value.trim()); }
 
 function loadSheetState() {
-  document.getElementById('sheetUrl').value  = localStorage.getItem(KEY_SHEET)  || '';
+  document.getElementById('sheetUrl').value  = localStorage.getItem(KEY_SHEET)  || DEFAULT_SHEET_URL;
   document.getElementById('editorUrl').value = localStorage.getItem(KEY_EDITOR) || '';
 }
 
@@ -1197,7 +1205,7 @@ if ('serviceWorker' in navigator) {
   // will overwrite the cached copy on success or quietly keep it on
   // failure (also tagging rosterFromCache=true in the failure path).
   const cached = loadRosterCache();
-  const url = localStorage.getItem(KEY_SHEET) || '';
+  const url = localStorage.getItem(KEY_SHEET) || DEFAULT_SHEET_URL;
   if (cached && cached.source_url === url && Array.isArray(cached.roster)) {
     roster = cached.roster;
     rosterFetchedAt = cached.fetched_at;
