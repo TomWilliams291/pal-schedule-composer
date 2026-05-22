@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PAL Roadside Schedule Composer V2.0</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<meta name="theme-color" content="#c1121f">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Tahoma,sans-serif;background:#1a1a2e;color:#e0e0e0;min-height:100vh}
@@ -72,6 +75,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
   <button class="tab-btn active" onclick="switchTab('schedule',this)">Schedule</button>
   <button class="tab-btn" onclick="switchTab('avail',this)">Availability Update</button>
   <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
+  <button class="tab-btn" id="outboxTabBtn" onclick="switchTab('outbox',this)" style="display:none;color:#e8a020">Outbox (0)</button>
 </div>
 <div id="scheduleTab">
 <div class="wrap">
@@ -321,6 +325,21 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 </div>
 </div><!-- /wrap -->
 </div><!-- /settingsTab -->
+
+<!-- ─────────── Outbox tab ─────────── -->
+<div id="outboxTab" style="display:none">
+<div class="wrap">
+<div class="form" style="max-width:900px">
+  <div class="card">
+    <div class="ct">Pending Emails &mdash; <span id="outboxCount">0</span> queued
+      <button class="cpybtn" style="margin-left:auto;width:auto;margin:0;padding:6px 14px;color:#e8a020;border-color:#3a2a10" onclick="clearOutbox()">Clear all</button>
+    </div>
+    <div class="hint" style="margin-bottom:10px">These emails were composed while you were offline.  Click <b>Send now</b> on each to open it in Gmail and hit send.  Then click <b>Mark sent</b> to remove it from this list.</div>
+    <div id="outboxList"></div>
+  </div>
+</div>
+</div><!-- /wrap -->
+</div><!-- /outboxTab -->
 
 <script>
 history.scrollRestoration = 'manual';
@@ -584,11 +603,7 @@ function upd() {
 function openGmail() {
   const unknowns = collectUnknowns(scheduleTechInputs());
   if (unknowns.length) { showUnknownsAlert(unknowns, 'Schedule'); return; }
-  const url = 'https://mail.google.com/mail/?view=cm&fs=1'
-    + '&to='   + encodeURIComponent(allRecipients().join(','))
-    + '&su='   + encodeURIComponent(buildSubject())
-    + '&body=' + encodeURIComponent(buildBody());
-  window.open(url, '_blank');
+  sendOrQueue('Schedule', buildSubject(), buildBody(), allRecipients());
 }
 
 function copyBody() {
@@ -620,8 +635,10 @@ function switchTab(tab, btn) {
   document.getElementById('scheduleTab').style.display = tab === 'schedule' ? '' : 'none';
   document.getElementById('availTab').style.display    = tab === 'avail'    ? '' : 'none';
   document.getElementById('settingsTab').style.display = tab === 'settings' ? '' : 'none';
-  if (tab === 'avail') updAvail();
+  document.getElementById('outboxTab').style.display   = tab === 'outbox'   ? '' : 'none';
+  if (tab === 'avail')    updAvail();
   if (tab === 'settings') renderSettings();
+  if (tab === 'outbox')   renderOutbox();
   window.scrollTo(0, 0);
 }
 
@@ -726,11 +743,7 @@ function openAvailGmail() {
     document.getElementById('avReturn').focus();
     return;
   }
-  const url = 'https://mail.google.com/mail/?view=cm&fs=1'
-    + '&to='   + encodeURIComponent(allRecipients().join(','))
-    + '&su='   + encodeURIComponent(buildAvailSubject())
-    + '&body=' + encodeURIComponent(buildAvailBody());
-  window.open(url, '_blank');
+  sendOrQueue(kindLabel, buildAvailSubject(), buildAvailBody(), allRecipients());
 }
 
 function copyAvailBody() {
@@ -747,7 +760,11 @@ function copyAvailBody() {
 // localhost proxy needed.
 const KEY_SHEET  = 'pal_scores_sheet';
 const KEY_EDITOR = 'pal_scores_editor';
+const KEY_ROSTER_CACHE = 'pal_roster_cache';
+const KEY_OUTBOX = 'pal_outbox';
 let roster = [];   // [{name, role, aliases:[]}]  loaded from the Sheet
+let rosterFetchedAt = null;
+let rosterFromCache = false;
 
 function saveSheetUrl()  { localStorage.setItem(KEY_SHEET,  document.getElementById('sheetUrl').value.trim()); }
 function saveEditorUrl() { localStorage.setItem(KEY_EDITOR, document.getElementById('editorUrl').value.trim()); }
@@ -764,6 +781,7 @@ async function refreshFromSheet() {
   if (!url) {
     status.textContent = 'Paste a CSV URL above first.';
     roster = [];
+    rosterFetchedAt = null;
     syncDatalist();
     updateRosterBanner();
     renderSettings();
@@ -783,13 +801,28 @@ async function refreshFromSheet() {
       return;
     }
     roster = parsed;
+    rosterFetchedAt = new Date().toISOString();
+    rosterFromCache = false;
+    saveRosterCache(parsed, url, rosterFetchedAt);
     syncDatalist();
     updateRosterBanner();
     renderSettings();
     status.textContent = `Loaded ${roster.length} techs from Sheet at ${new Date().toLocaleTimeString()}.`;
   } catch (err) {
-    status.textContent = `Fetch failed: ${err.message}. Check the CSV URL and your network connection.`;
-    console.error(err);
+    // Fetch failed — try the cache as a fallback so offline opens still work.
+    const cached = loadRosterCache();
+    if (cached && cached.source_url === url) {
+      roster = cached.roster;
+      rosterFetchedAt = cached.fetched_at;
+      rosterFromCache = true;
+      syncDatalist();
+      updateRosterBanner();
+      renderSettings();
+      status.textContent = `Fetch failed (${err.message}). Using cached roster from ${relativeTime(cached.fetched_at)}.`;
+    } else {
+      status.textContent = `Fetch failed: ${err.message}. No cached roster available.`;
+    }
+    console.warn(err);
   }
 }
 
@@ -871,13 +904,18 @@ function syncDatalist() {
 
 function updateRosterBanner() {
   const banner = document.getElementById('rosterBanner');
+  const offlinePrefix = navigator.onLine ? '' : '● OFFLINE — ';
+  let body, color;
   if (!roster.length) {
-    banner.textContent = 'Roster: not loaded — strict mode OFF';
-    banner.style.color = '#7a8a9a';
+    body = 'Roster: not loaded — strict mode OFF';
+    color = navigator.onLine ? '#7a8a9a' : '#c1121f';
   } else {
-    banner.textContent = `Roster: ${roster.length} techs — strict mode ON`;
-    banner.style.color = '#2ea043';
+    const suffix = rosterFromCache ? ` (cached, ${relativeTime(rosterFetchedAt)})` : '';
+    body = `Roster: ${roster.length} techs — strict mode ON${suffix}`;
+    color = navigator.onLine ? (rosterFromCache ? '#e8a020' : '#2ea043') : '#c1121f';
   }
+  banner.textContent = offlinePrefix + body;
+  banner.style.color = color;
 }
 
 function renderSettings() {
@@ -961,6 +999,181 @@ function scheduleTechInputs() {
 function tlTechInputs()    { return [...document.querySelectorAll('#tlT .tr input[type=text]:first-child')]; }
 function ncnsTechInputs()  { return [...document.querySelectorAll('#ncnsT .tr input[type=text]:first-child')]; }
 
+// ── Roster cache ─────────────────────────────────────────────────────────────
+// Persist the parsed roster so it survives offline reloads.  Keyed by source
+// URL so switching to a different Sheet doesn't quietly serve stale data
+// from a previous URL.
+function saveRosterCache(parsed, sourceUrl, fetchedAt) {
+  try {
+    localStorage.setItem(KEY_ROSTER_CACHE, JSON.stringify({
+      roster: parsed, source_url: sourceUrl, fetched_at: fetchedAt,
+    }));
+  } catch (err) { console.warn('Failed to cache roster:', err); }
+}
+
+function loadRosterCache() {
+  try {
+    const raw = localStorage.getItem(KEY_ROSTER_CACHE);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (!data || !Array.isArray(data.roster)) return null;
+    return data;
+  } catch (err) {
+    console.warn('Failed to load cached roster:', err);
+    return null;
+  }
+}
+
+function relativeTime(iso) {
+  if (!iso) return '';
+  const then = new Date(iso).getTime();
+  if (isNaN(then)) return '';
+  const ms = Date.now() - then;
+  const min = Math.round(ms / 60000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const day = Math.round(hr / 24);
+  return `${day}d ago`;
+}
+
+// ── Outbox ───────────────────────────────────────────────────────────────────
+function loadOutbox() {
+  try {
+    const raw = localStorage.getItem(KEY_OUTBOX);
+    const arr = raw ? JSON.parse(raw) : [];
+    return Array.isArray(arr) ? arr : [];
+  } catch { return []; }
+}
+
+function saveOutbox(items) {
+  localStorage.setItem(KEY_OUTBOX, JSON.stringify(items));
+  updateOutboxTab();
+}
+
+function updateOutboxTab() {
+  const items = loadOutbox();
+  const btn = document.getElementById('outboxTabBtn');
+  if (!btn) return;
+  if (items.length) {
+    btn.style.display = '';
+    btn.textContent = `Outbox (${items.length})`;
+  } else {
+    btn.style.display = 'none';
+    // If user is currently on Outbox and it just emptied, switch back to Schedule.
+    if (document.getElementById('outboxTab').style.display !== 'none') {
+      switchTab('schedule', document.querySelector('.tab-btn'));
+    }
+  }
+}
+
+function enqueueOutbox(kind, subject, body, recipients) {
+  const items = loadOutbox();
+  items.push({
+    id: 'mail_' + Date.now() + '_' + Math.random().toString(36).slice(2,8),
+    kind, subject, body, recipients,
+    created_at: new Date().toISOString(),
+  });
+  saveOutbox(items);
+}
+
+function gmailUrlFor(item) {
+  return 'https://mail.google.com/mail/?view=cm&fs=1'
+    + '&to='   + encodeURIComponent((item.recipients || []).join(','))
+    + '&su='   + encodeURIComponent(item.subject || '')
+    + '&body=' + encodeURIComponent(item.body || '');
+}
+
+function sendOutboxItem(id) {
+  const item = loadOutbox().find(i => i.id === id);
+  if (!item) return;
+  window.open(gmailUrlFor(item), '_blank');
+  // Don't auto-remove — user may not have hit Send in Gmail.  They click
+  // "Mark sent" to confirm and remove it from the queue.
+}
+
+function markSent(id) {
+  saveOutbox(loadOutbox().filter(i => i.id !== id));
+  renderOutbox();
+}
+
+function removeOutboxItem(id) {
+  if (!confirm('Remove this email from the outbox without sending?')) return;
+  saveOutbox(loadOutbox().filter(i => i.id !== id));
+  renderOutbox();
+}
+
+function clearOutbox() {
+  if (!loadOutbox().length) return;
+  if (!confirm('Remove ALL pending emails from the outbox without sending?')) return;
+  saveOutbox([]);
+  renderOutbox();
+}
+
+function renderOutbox() {
+  const items = loadOutbox();
+  document.getElementById('outboxCount').textContent = items.length;
+  const list = document.getElementById('outboxList');
+  if (!items.length) {
+    list.innerHTML = '<i style="color:#5a6a7a">Nothing pending.</i>';
+    return;
+  }
+  list.innerHTML = '';
+  for (const item of items) {
+    const card = document.createElement('div');
+    card.style.cssText = 'border:1px solid #0f3460;border-radius:6px;padding:10px;margin-bottom:8px;background:#0d1b2a';
+    card.innerHTML =
+      '<div style="font-size:11px;color:#7a8a9a;margin-bottom:4px">'
+        + escapeHtml(item.kind) + ' &middot; queued ' + escapeHtml(relativeTime(item.created_at)) + '</div>'
+      + '<div style="font-size:13px;color:#fff;margin-bottom:6px;font-weight:600">' + escapeHtml(item.subject) + '</div>'
+      + '<div style="font-size:11px;color:#7a8a9a;margin-bottom:8px;word-break:break-all">To: ' + escapeHtml((item.recipients || []).join(', ')) + '</div>'
+      + '<pre style="font-family:\'Courier New\',monospace;font-size:11px;color:#b8c8d8;white-space:pre-wrap;background:#16213e;padding:8px;border-radius:4px;max-height:180px;overflow:auto;margin-bottom:8px">' + escapeHtml(item.body) + '</pre>'
+      + '<div style="display:flex;gap:6px">'
+        + '<button class="sendbtn" style="flex:1;margin:0;padding:8px" onclick="sendOutboxItem(\'' + item.id + '\')">&#9993; Send now</button>'
+        + '<button class="cpybtn" style="width:auto;margin:0;padding:8px 14px" onclick="markSent(\'' + item.id + '\')">Mark sent</button>'
+        + '<button class="cpybtn" style="width:auto;margin:0;padding:8px 14px;color:#c1121f;border-color:#3a1010" onclick="removeOutboxItem(\'' + item.id + '\')">Remove</button>'
+      + '</div>';
+    list.appendChild(card);
+  }
+}
+
+// ── Offline-aware send wrapper ───────────────────────────────────────────────
+// When offline, queue the email instead of opening a Gmail tab that can't
+// load.  When online, behave exactly like the original openGmail() did.
+function sendOrQueue(kind, subject, body, recipients) {
+  if (!navigator.onLine) {
+    enqueueOutbox(kind, subject, body, recipients);
+    alert('No network — email queued for sending.\n\n'
+      + loadOutbox().length + ' email(s) now in the Outbox.\n'
+      + 'When you\'re back online, open the Outbox tab and click "Send now" on each one.');
+    return;
+  }
+  window.open('https://mail.google.com/mail/?view=cm&fs=1'
+    + '&to='   + encodeURIComponent(recipients.join(','))
+    + '&su='   + encodeURIComponent(subject)
+    + '&body=' + encodeURIComponent(body), '_blank');
+}
+
+// ── Online/offline transitions ───────────────────────────────────────────────
+window.addEventListener('online',  () => {
+  updateRosterBanner();
+  const pending = loadOutbox().length;
+  if (pending) {
+    alert('You\'re back online. ' + pending + ' email(s) waiting in the Outbox — open the Outbox tab to send them.');
+  }
+});
+window.addEventListener('offline', updateRosterBanner);
+
+// ── Service worker registration ──────────────────────────────────────────────
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
+
 // ── Init ─────────────────────────────────────────────────────────────────────
 (function init() {
   const h = new Date().getHours();
@@ -975,12 +1188,24 @@ function ncnsTechInputs()  { return [...document.querySelectorAll('#ncnsT .tr in
   updateTP();  // set placeholders to match detected shift type
   upd();
 
-  // Roster sheet — load URLs from localStorage, attempt fetch if set
+  // Roster sheet — load URLs from localStorage
   loadSheetState();
-  updateRosterBanner();
-  if (localStorage.getItem(KEY_SHEET)) {
-    refreshFromSheet();
+
+  // Hydrate the roster from cache FIRST so an offline open shows data
+  // immediately, then attempt a fresh fetch if online.  refreshFromSheet()
+  // will overwrite the cached copy on success or quietly keep it on
+  // failure (also tagging rosterFromCache=true in the failure path).
+  const cached = loadRosterCache();
+  const url = localStorage.getItem(KEY_SHEET) || '';
+  if (cached && cached.source_url === url && Array.isArray(cached.roster)) {
+    roster = cached.roster;
+    rosterFetchedAt = cached.fetched_at;
+    rosterFromCache = true;
+    syncDatalist();
   }
+  updateRosterBanner();
+  updateOutboxTab();
+  if (url) refreshFromSheet();
 })();
 window.addEventListener('load', () => window.scrollTo(0, 0));
 </script>
