@@ -350,7 +350,7 @@ let rowCtr  = 0;
 let tlCtr   = 0, ncnsCtr = 0;
 
 // ── Tech rows ────────────────────────────────────────────────────────────────
-function addRow(z) {
+function addRow(z, focusNew) {
   const id = 'r' + (++rowCtr);
   const d = document.createElement('div');
   d.className = 'tr'; d.id = id;
@@ -360,7 +360,10 @@ function addRow(z) {
                 `<label class="fs-lbl"><input type="checkbox" class="fs-cb" onchange="toggleFS(this)"> full</label>` +
                 `<button class="rm" onclick="document.getElementById('${id}').remove();upd()" title="Remove">&times;</button>`;
   document.getElementById(z + 'T').appendChild(d);
-  d.querySelector('input').focus();
+  // Only focus when the user clicked + Add tech.  During init seeding the
+  // focus would scroll the page down to the last-seeded row (Battery
+  // Technicians), forcing the user to scroll back up before starting.
+  if (focusNew !== false) d.querySelector('input').focus();
   upd();
 }
 
@@ -1191,8 +1194,9 @@ if ('serviceWorker' in navigator) {
   document.querySelector('input[name="role"][value="nav"]').checked  = true;
   document.getElementById('dt').value = fmtDate(new Date());
 
-  // Seed one row per active zone
-  addRow('n'); addRow('c'); addRow('c'); addRow('s'); addRow('bat');
+  // Seed one row per active zone.  Pass focusNew=false so the page
+  // doesn't auto-scroll down to the last-seeded row.
+  addRow('n', false); addRow('c', false); addRow('c', false); addRow('s', false); addRow('bat', false);
 
   updateTP();  // set placeholders to match detected shift type
   upd();
