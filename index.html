@@ -248,7 +248,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
         <label><input type="radio" name="avRole" value="locksmith" onchange="updAvail()"> Locksmith</label>
       </div>
     </div>
-    <div class="row"><span class="lbl">Shift start</span><input type="text" id="avTime" placeholder="10:30am" oninput="updAvail()" style="max-width:115px"></div>
+    <div class="row"><span class="lbl" id="avTimeLabel">Left at</span><input type="text" id="avTime" placeholder="10:30am" oninput="updAvail()" style="max-width:115px"></div>
     <div class="row" id="avShiftEndRow" style="display:none"><span class="lbl">Shift end</span><input type="text" id="avShiftEnd" placeholder="7pm" oninput="updAvail()" style="max-width:115px"></div>
     <div class="row" id="avReturnRow">
       <span class="lbl">Expected return</span>
@@ -724,6 +724,7 @@ function updAvail() {
     document.getElementById('avReturnRow').style.display  = isAvail ? 'none' : '';
     document.getElementById('avRoleRow').style.display     = isAvail ? ''     : 'none';
     document.getElementById('avShiftEndRow').style.display = isAvail ? ''     : 'none';
+    document.getElementById('avTimeLabel').textContent     = isAvail ? 'Shift start' : 'Left at';
   }
 }
 
