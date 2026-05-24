@@ -129,16 +129,14 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
   <!-- NORTHERN ZONES -->
   <div class="card" id="nCard">
     <div class="ct">Northern Zones
-      <label class="tog"><input type="checkbox" id="nTog" checked onchange="tog('n');compound();upd()"> Include</label>
+      <span class="tr-terr">
+        <label><input type="checkbox" class="sec-zone" data-sec="n" value="North"   checked onchange="upd()"> N</label>
+        <label><input type="checkbox" class="sec-zone" data-sec="n" value="Central" onchange="upd()"> C</label>
+        <label><input type="checkbox" class="sec-zone" data-sec="n" value="South"   onchange="upd()"> S</label>
+      </span>
+      <label class="tog"><input type="checkbox" id="nTog" checked onchange="tog('n');upd()"> Include</label>
     </div>
     <div id="nF">
-      <div class="row" style="margin-bottom:10px">
-        <span class="lbl">Header</span>
-        <div class="rg">
-          <label><input type="radio" name="nH" value="Northern Zones" checked onchange="compound();upd()"> Northern Zones</label>
-          <label><input type="radio" name="nH" value="Northern/Central Zones" onchange="compound();upd()"> Northern/Central (combined)</label>
-        </div>
-      </div>
       <div id="nT"></div>
       <button class="addrow" onclick="addRow('n')">+ Add tech</button>
     </div>
@@ -147,16 +145,14 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
   <!-- CENTRAL ZONES -->
   <div class="card" id="cCard">
     <div class="ct">Central Zones
-      <label class="tog"><input type="checkbox" id="cTog" checked onchange="tog('c');compound();upd()"> Include</label>
+      <span class="tr-terr">
+        <label><input type="checkbox" class="sec-zone" data-sec="c" value="North"   onchange="upd()"> N</label>
+        <label><input type="checkbox" class="sec-zone" data-sec="c" value="Central" checked onchange="upd()"> C</label>
+        <label><input type="checkbox" class="sec-zone" data-sec="c" value="South"   onchange="upd()"> S</label>
+      </span>
+      <label class="tog"><input type="checkbox" id="cTog" checked onchange="tog('c');upd()"> Include</label>
     </div>
     <div id="cF">
-      <div class="row" style="margin-bottom:10px">
-        <span class="lbl">Header</span>
-        <div class="rg">
-          <label><input type="radio" name="cH" value="Central Zones" checked onchange="compound();upd()"> Central Zones</label>
-          <label><input type="radio" name="cH" value="Central/Southern Zones" onchange="compound();upd()"> Central/Southern (combined)</label>
-        </div>
-      </div>
       <div id="cT"></div>
       <button class="addrow" onclick="addRow('c')">+ Add tech</button>
     </div>
@@ -165,6 +161,11 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
   <!-- SOUTHERN ZONES -->
   <div class="card" id="sCard">
     <div class="ct">Southern Zones
+      <span class="tr-terr">
+        <label><input type="checkbox" class="sec-zone" data-sec="s" value="North"   onchange="upd()"> N</label>
+        <label><input type="checkbox" class="sec-zone" data-sec="s" value="Central" onchange="upd()"> C</label>
+        <label><input type="checkbox" class="sec-zone" data-sec="s" value="South"   checked onchange="upd()"> S</label>
+      </span>
       <label class="tog"><input type="checkbox" id="sTog" checked onchange="tog('s');upd()"> Include</label>
     </div>
     <div id="sF">
@@ -354,20 +355,8 @@ function addRow(z, focusNew) {
   const id = 'r' + (++rowCtr);
   const d = document.createElement('div');
   d.className = 'tr'; d.id = id;
-  // Zone checkboxes for N/C/S sections — pre-check the section's own zone.
-  // Battery rows don't get zone checkboxes.
-  let terrHtml = '';
-  if (z !== 'bat') {
-    const def = { n: 'North', c: 'Central', s: 'South' }[z] || '';
-    terrHtml = `<span class="tr-terr">` +
-      `<label><input type="checkbox" class="sched-zone" value="North"   ${def === 'North'   ? 'checked' : ''} onchange="upd()"> N</label>` +
-      `<label><input type="checkbox" class="sched-zone" value="Central" ${def === 'Central' ? 'checked' : ''} onchange="upd()"> C</label>` +
-      `<label><input type="checkbox" class="sched-zone" value="South"   ${def === 'South'   ? 'checked' : ''} onchange="upd()"> S</label>` +
-      `</span>`;
-  }
   d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="upd()" data-z="${z}">` +
                 `<select class="time-select" onchange="upd()"></select>` +
-                terrHtml +
                 `<button class="rm" onclick="document.getElementById('${id}').remove();upd()" title="Remove">&times;</button>`;
   document.getElementById(z + 'T').appendChild(d);
   populateTimeSelect(d.querySelector('.time-select'));
@@ -382,8 +371,7 @@ function getTechs(z) {
   return [...document.querySelectorAll(`#${z}T .tr`)].map(r => {
     const nameInp = r.querySelector('input[type=text]');
     const timeSel = r.querySelector('.time-select');
-    const zones   = [...r.querySelectorAll('.sched-zone:checked')].map(cb => cb.value);
-    return { name: nameInp.value.trim(), time: timeSel ? timeSel.value : '', zones };
+    return { name: nameInp.value.trim(), time: timeSel ? timeSel.value : '' };
   }).filter(t => t.name);
 }
 
@@ -445,21 +433,13 @@ function tog(z) {
   document.getElementById(z + 'F').classList.toggle('dim', !on);
 }
 
-// ── Compound zone logic ──────────────────────────────────────────────────────
-function compound() {
-  const nOn  = document.getElementById('nTog').checked;
-  const nVal = radio('nH');
-  const cOn  = document.getElementById('cTog').checked;
-  const cVal = radio('cH');
-
-  const nc = nOn && nVal === 'Northern/Central Zones';
-  const cs = cOn && cVal === 'Central/Southern Zones';
-
-  document.getElementById('cCard').classList.toggle('dim', nc);
-  if (nc) { document.getElementById('cTog').checked = false; document.getElementById('cF').classList.add('dim'); }
-
-  document.getElementById('sCard').classList.toggle('dim', cs);
-  if (cs) { document.getElementById('sTog').checked = false; document.getElementById('sF').classList.add('dim'); }
+// ── Section-level zone header ────────────────────────────────────────────────
+// Reads the N/C/S checkboxes on each section card to build the email header.
+function sectionHeader(z) {
+  const zones = [...document.querySelectorAll(`.sec-zone[data-sec="${z}"]:checked`)].map(cb => cb.value);
+  const nameMap = { North: 'Northern', Central: 'Central', South: 'Southern' };
+  if (!zones.length) return { n: 'Northern', c: 'Central', s: 'Southern' }[z] + ' Zones';
+  return zones.map(v => nameMap[v] || v).join('/') + ' Zones';
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -548,23 +528,14 @@ function buildBody() {
     if (!on) return;
     const techs = getTechs(z);
     if (!techs.length) return;
-    const defaultZone = { n: 'North', c: 'Central', s: 'South' }[z];
-    const lines = techs.map(t => {
-      let line = t.time ? `${t.name} (${t.time})` : t.name;
-      // Append zone tag when a tech covers more than their section's zone
-      if (t.zones && t.zones.length > 0) {
-        const isDefault = t.zones.length === 1 && t.zones[0] === defaultZone;
-        if (!isDefault) line += ' ' + t.zones.join('/');
-      }
-      return line;
-    }).join('\n');
+    const lines = techs.map(t => t.time ? `${t.name} (${t.time})` : t.name).join('\n');
     secs.push(`${hdr}:\n\n${lines}`);
   }
 
-  zone(document.getElementById('nTog').checked,   radio('nH') || 'Northern Zones',  'n');
-  zone(document.getElementById('cTog').checked,   radio('cH') || 'Central Zones',   'c');
-  zone(document.getElementById('sTog').checked,   'Southern Zones',                 's');
-  zone(document.getElementById('batTog').checked, 'Battery Technicians',            'bat');
+  zone(document.getElementById('nTog').checked,   sectionHeader('n'), 'n');
+  zone(document.getElementById('cTog').checked,   sectionHeader('c'), 'c');
+  zone(document.getElementById('sTog').checked,   sectionHeader('s'), 's');
+  zone(document.getElementById('batTog').checked, 'Battery Technicians', 'bat');
 
   // Sign-off
   const soLines = ['Stay safe and have a great shift.', '', sName, title, 'Pop-A-Lock of Northern NJ'];
