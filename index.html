@@ -354,8 +354,20 @@ function addRow(z, focusNew) {
   const id = 'r' + (++rowCtr);
   const d = document.createElement('div');
   d.className = 'tr'; d.id = id;
+  // Zone checkboxes for N/C/S sections — pre-check the section's own zone.
+  // Battery rows don't get zone checkboxes.
+  let terrHtml = '';
+  if (z !== 'bat') {
+    const def = { n: 'North', c: 'Central', s: 'South' }[z] || '';
+    terrHtml = `<span class="tr-terr">` +
+      `<label><input type="checkbox" class="sched-zone" value="North"   ${def === 'North'   ? 'checked' : ''} onchange="upd()"> N</label>` +
+      `<label><input type="checkbox" class="sched-zone" value="Central" ${def === 'Central' ? 'checked' : ''} onchange="upd()"> C</label>` +
+      `<label><input type="checkbox" class="sched-zone" value="South"   ${def === 'South'   ? 'checked' : ''} onchange="upd()"> S</label>` +
+      `</span>`;
+  }
   d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="upd()" data-z="${z}">` +
                 `<select class="time-select" onchange="upd()"></select>` +
+                terrHtml +
                 `<button class="rm" onclick="document.getElementById('${id}').remove();upd()" title="Remove">&times;</button>`;
   document.getElementById(z + 'T').appendChild(d);
   populateTimeSelect(d.querySelector('.time-select'));
@@ -370,7 +382,8 @@ function getTechs(z) {
   return [...document.querySelectorAll(`#${z}T .tr`)].map(r => {
     const nameInp = r.querySelector('input[type=text]');
     const timeSel = r.querySelector('.time-select');
-    return { name: nameInp.value.trim(), time: timeSel ? timeSel.value : '' };
+    const zones   = [...r.querySelectorAll('.sched-zone:checked')].map(cb => cb.value);
+    return { name: nameInp.value.trim(), time: timeSel ? timeSel.value : '', zones };
   }).filter(t => t.name);
 }
 
@@ -535,7 +548,16 @@ function buildBody() {
     if (!on) return;
     const techs = getTechs(z);
     if (!techs.length) return;
-    const lines = techs.map(t => t.time ? `${t.name} (${t.time})` : t.name).join('\n');
+    const defaultZone = { n: 'North', c: 'Central', s: 'South' }[z];
+    const lines = techs.map(t => {
+      let line = t.time ? `${t.name} (${t.time})` : t.name;
+      // Append zone tag when a tech covers more than their section's zone
+      if (t.zones && t.zones.length > 0) {
+        const isDefault = t.zones.length === 1 && t.zones[0] === defaultZone;
+        if (!isDefault) line += ' ' + t.zones.join('/');
+      }
+      return line;
+    }).join('\n');
     secs.push(`${hdr}:\n\n${lines}`);
   }
 
