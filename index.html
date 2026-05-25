@@ -460,7 +460,8 @@ function buildTLBody() {
   const techs = getTLTechs();
   if (!techs.length) return `Tech Late ${dt}\n\n(no techs entered)`;
   const lines = techs.map(t => {
-    let line = t.time ? `${t.name} (${t.time})` : t.name;
+    const nm = canonicalDisplayName(t.name);
+    let line = t.time ? `${nm} (${t.time})` : nm;
     if (t.territory) line += ` ${t.territory}`;
     return line;
   }).join('\n');
@@ -471,7 +472,10 @@ function buildNCNSBody() {
   const dt    = v('dt');
   const techs = getNCNSTechs();
   if (!techs.length) return `No Call No Show ${dt}\n\n(no techs entered)`;
-  const lines = techs.map(t => t.time ? `${t.name} (${t.time})` : t.name).join('\n');
+  const lines = techs.map(t => {
+    const nm = canonicalDisplayName(t.name);
+    return t.time ? `${nm} (${t.time})` : nm;
+  }).join('\n');
   return `No Call No Show ${dt}\n\n${lines}\n\nIs to be removed from the schedule.`;
 }
 
@@ -528,7 +532,10 @@ function buildBody() {
     if (!on) return;
     const techs = getTechs(z);
     if (!techs.length) return;
-    const lines = techs.map(t => t.time ? `${t.name} (${t.time})` : t.name).join('\n');
+    const lines = techs.map(t => {
+      const nm = canonicalDisplayName(t.name);
+      return t.time ? `${nm} (${t.time})` : nm;
+    }).join('\n');
     secs.push(`${hdr}:\n\n${lines}`);
   }
 
@@ -984,6 +991,23 @@ function isKnownName(name) {
     }
   }
   return false;
+}
+
+// Resolve a typed name (canonical or alias) to the canonical first-name
+// used in email bullets ("Aleidy Ortiz" -> "Aleidy"). Falls back to the
+// typed value when no roster match is found, so unknown names still appear
+// as the user typed them (validation catches those separately).
+function canonicalDisplayName(typed) {
+  const raw = (typed || '').trim();
+  if (!raw || !roster.length) return raw;
+  const nl = raw.toLowerCase();
+  for (const t of roster) {
+    if (t.name.toLowerCase() === nl) return t.name.split(/\s+/)[0];
+    for (const a of (t.aliases || [])) {
+      if (a.toLowerCase() === nl) return t.name.split(/\s+/)[0];
+    }
+  }
+  return raw;
 }
 
 function collectUnknowns(inputs) {
