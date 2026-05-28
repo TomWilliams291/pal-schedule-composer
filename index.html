@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PAL Roadside Schedule Composer V2.1</title>
+<title>PAL Roadside Schedule Composer V2.2</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="icon" sizes="any" href="favicon.ico">
@@ -26,6 +26,7 @@ body{font-family:'Segoe UI',Tahoma,sans-serif;background:#1a1a2e;color:#e0e0e0;m
 input[type=text],select{background:#0d1b2a;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;padding:6px 9px;font-size:13px;font-family:inherit;width:100%;transition:border-color .15s}
 input[type=text]:focus,select:focus{outline:none;border-color:#c1121f}
 input[type=text]:disabled{opacity:.4;cursor:not-allowed;color:#5a6a7a}
+select:disabled{opacity:.4;cursor:not-allowed}
 input::placeholder{color:#3a4a5a}
 .rg{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .rg label{min-width:0;display:flex;align-items:center;gap:5px;cursor:pointer;color:#ccc;font-size:12px}
@@ -34,10 +35,12 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 .rg-sep{width:1px;background:#2a3a5a;align-self:stretch;margin:0 4px;flex-shrink:0}
 .mode-lbl{color:#e8a020!important}
 .mode-lbl input[type=checkbox]{accent-color:#e8a020!important}
-.tr{display:flex;gap:6px;margin-bottom:5px;align-items:center}
-.tr input:nth-child(1){flex:2}
+.tr{display:flex;gap:6px;margin-bottom:5px;align-items:center;flex-wrap:wrap}
+.tr input:nth-child(1){flex:2;min-width:130px}
 .tr input:nth-child(2){flex:1;min-width:76px}
-.tr .time-select{flex:1;min-width:110px;width:auto}
+.tr .time-select{flex:1;min-width:96px;width:auto}
+.tr .role-select{flex:1.4;min-width:124px;width:auto}
+.tr .loc-select{flex:1.2;min-width:108px;width:auto}
 .rm{background:none;border:none;color:#3a5a7a;cursor:pointer;font-size:16px;padding:2px 5px;line-height:1;border-radius:3px;flex-shrink:0}
 .rm:hover{color:#c1121f}
 .addrow{background:none;border:1px dashed #1a3050;color:#4a6a8a;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:4px;width:100%;text-align:left;margin-top:2px;font-family:inherit}
@@ -62,12 +65,16 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 .tr-terr{display:flex;gap:5px;align-items:center;flex-shrink:0}
 .tr-terr label{display:flex;align-items:center;gap:2px;cursor:pointer;color:#aaa;font-size:11px}
 .tr-terr input[type=checkbox]{width:auto;accent-color:#c1121f}
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;z-index:1000;overflow-y:auto}
+.modal-box{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:18px;max-width:560px;width:100%}
+.modal-box .pv-hdr{font-size:13px;margin-bottom:12px}
+.rv-note{font-size:11px;color:#7a8a9a;margin:8px 0 0}
 </style>
 </head>
 <body>
 <div class="hdr">
   <div style="flex:1">
-    <h1>PAL Roadside Schedule Composer V2.1</h1>
+    <h1>PAL Roadside Schedule Composer V2.2</h1>
     <p>Pop-A-Lock of Northern NJ &mdash; tech names validated against the canonical Google Sheet</p>
   </div>
   <div style="font-size:11px;color:#7a8a9a;text-align:right" id="rosterBanner">Roster: not loaded &mdash; strict mode OFF</div>
@@ -126,63 +133,11 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     </div>
   </div>
 
-  <!-- NORTHERN ZONES -->
-  <div class="card" id="nCard">
-    <div class="ct">Northern Zones
-      <span class="tr-terr">
-        <label><input type="checkbox" class="sec-zone" data-sec="n" value="North"   checked onchange="upd()"> N</label>
-        <label><input type="checkbox" class="sec-zone" data-sec="n" value="Central" onchange="upd()"> C</label>
-        <label><input type="checkbox" class="sec-zone" data-sec="n" value="South"   onchange="upd()"> S</label>
-      </span>
-      <label class="tog"><input type="checkbox" id="nTog" checked onchange="tog('n');upd()"> Include</label>
-    </div>
-    <div id="nF">
-      <div id="nT"></div>
-      <button class="addrow" onclick="addRow('n')">+ Add tech</button>
-    </div>
-  </div>
-
-  <!-- CENTRAL ZONES -->
-  <div class="card" id="cCard">
-    <div class="ct">Central Zones
-      <span class="tr-terr">
-        <label><input type="checkbox" class="sec-zone" data-sec="c" value="North"   onchange="upd()"> N</label>
-        <label><input type="checkbox" class="sec-zone" data-sec="c" value="Central" checked onchange="upd()"> C</label>
-        <label><input type="checkbox" class="sec-zone" data-sec="c" value="South"   onchange="upd()"> S</label>
-      </span>
-      <label class="tog"><input type="checkbox" id="cTog" checked onchange="tog('c');upd()"> Include</label>
-    </div>
-    <div id="cF">
-      <div id="cT"></div>
-      <button class="addrow" onclick="addRow('c')">+ Add tech</button>
-    </div>
-  </div>
-
-  <!-- SOUTHERN ZONES -->
-  <div class="card" id="sCard">
-    <div class="ct">Southern Zones
-      <span class="tr-terr">
-        <label><input type="checkbox" class="sec-zone" data-sec="s" value="North"   onchange="upd()"> N</label>
-        <label><input type="checkbox" class="sec-zone" data-sec="s" value="Central" onchange="upd()"> C</label>
-        <label><input type="checkbox" class="sec-zone" data-sec="s" value="South"   checked onchange="upd()"> S</label>
-      </span>
-      <label class="tog"><input type="checkbox" id="sTog" checked onchange="tog('s');upd()"> Include</label>
-    </div>
-    <div id="sF">
-      <div id="sT"></div>
-      <button class="addrow" onclick="addRow('s')">+ Add tech</button>
-    </div>
-  </div>
-
-  <!-- BATTERY TECHNICIANS -->
+  <!-- TECHNICIANS -->
   <div class="card">
-    <div class="ct">Battery Technicians
-      <label class="tog"><input type="checkbox" id="batTog" checked onchange="tog('bat');upd()"> Include</label>
-    </div>
-    <div id="batF">
-      <div id="batT"></div>
-      <button class="addrow" onclick="addRow('bat')">+ Add tech</button>
-    </div>
+    <div class="ct">Technicians</div>
+    <div id="techT"></div>
+    <button class="addrow" onclick="addRow()">+ Add tech</button>
   </div>
 
 
@@ -198,7 +153,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="pv-meta">To: <b id="pvTo"></b></div>
     <div class="pv-meta">Subject: <b id="pvSub"></b></div>
     <div id="pvbody"></div>
-    <button class="sendbtn" onclick="openGmail()">&#9993; Open in Gmail</button>
+    <button class="sendbtn" onclick="openGmail()">Review</button>
     <button class="cpybtn" onclick="copyBody()">Copy email body</button>
   </div>
 </div>
@@ -343,6 +298,21 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 </div><!-- /wrap -->
 </div><!-- /outboxTab -->
 
+<!-- ─────────── Schedule review modal ─────────── -->
+<div id="reviewModal" class="modal-ov" style="display:none">
+  <div class="modal-box">
+    <div class="pv-hdr">Review before sending</div>
+    <div class="pv-meta">To: <b id="rvTo"></b></div>
+    <div class="pv-meta">Subject: <b id="rvSub"></b></div>
+    <div id="rvBody" class="pvbody"></div>
+    <div class="rv-note">Greeting is omitted here &mdash; the email Gmail opens will include it.</div>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="sendbtn" style="flex:1;margin:0" onclick="confirmSendSchedule()">&#9993; Looks good &mdash; Open in Gmail</button>
+      <button class="cpybtn" style="width:auto;margin:0;padding:11px 18px" onclick="closeReview()">Back to edit</button>
+    </div>
+  </div>
+</div>
+
 <script>
 history.scrollRestoration = 'manual';
 const FIXED = ['palautonav@gmail.com','palnnjpay@gmail.com','jason.oppenberg@popalocknj.com','Philip.Allan@PopALockNJ.com','help@houston-dispatch.com'];
@@ -351,28 +321,72 @@ let rowCtr  = 0;
 let tlCtr   = 0, ncnsCtr = 0;
 
 // ── Tech rows ────────────────────────────────────────────────────────────────
-function addRow(z, focusNew) {
+const ROLE_OPTS = ['Road Service Tech', 'Battery Tech', 'Battery Installer'];
+const LOCATION_OPTS = ['North', 'Central', 'South', 'North/Central', 'South/Central', 'All'];
+
+// Battery Tech is the only zoneless role — its Location field is disabled and
+// it gets a single role-named section.  Road Service Techs and Battery
+// Installers both carry a zone (Battery Installers keep their role but are
+// assigned a territory, like RS techs).
+const ZONELESS_ROLES = ['Battery Tech'];
+
+// Each Location expands to the individual zones it covers.  A multi-zone tech
+// is listed once under EACH zone they cover; the Monitor's roster parser
+// (navigator/roster.py) merges those repeated listings back into one tech that
+// carries all the territories.
+const ZONE_EXPAND = {
+  'North':         ['North'],
+  'Central':       ['Central'],
+  'South':         ['South'],
+  'North/Central': ['North', 'Central'],
+  'South/Central': ['South', 'Central'],
+  'All':           ['North', 'Central', 'South'],
+};
+const SINGLE_ZONES  = ['North', 'Central', 'South'];
+const SINGLE_HEADER = { North: 'Northern Zones:', Central: 'Central Zones:', South: 'Southern Zones:' };
+
+function fillSelect(sel, opts) {
+  for (const o of opts) {
+    const el = document.createElement('option');
+    el.value = o; el.textContent = o;
+    sel.appendChild(el);
+  }
+}
+
+function addRow(focusNew) {
   const id = 'r' + (++rowCtr);
   const d = document.createElement('div');
   d.className = 'tr'; d.id = id;
-  d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="upd()" data-z="${z}">` +
+  d.innerHTML = `<input type="text" list="techNames" placeholder="Tech name" oninput="upd()" data-tech>` +
                 `<select class="time-select" onchange="upd()"></select>` +
+                `<select class="role-select" onchange="onRoleChange(this);upd()"></select>` +
+                `<select class="loc-select" onchange="upd()"></select>` +
                 `<button class="rm" onclick="document.getElementById('${id}').remove();upd()" title="Remove">&times;</button>`;
-  document.getElementById(z + 'T').appendChild(d);
+  document.getElementById('techT').appendChild(d);
   populateTimeSelect(d.querySelector('.time-select'));
+  fillSelect(d.querySelector('.role-select'), ROLE_OPTS);
+  fillSelect(d.querySelector('.loc-select'), LOCATION_OPTS);
+  onRoleChange(d.querySelector('.role-select'));
   // Only focus when the user clicked + Add tech.  During init seeding the
-  // focus would scroll the page down to the last-seeded row (Battery
-  // Technicians), forcing the user to scroll back up before starting.
+  // focus would scroll the page down to the last-seeded row, forcing the
+  // user to scroll back up before starting.
   if (focusNew !== false) d.querySelector('input').focus();
   upd();
 }
 
-function getTechs(z) {
-  return [...document.querySelectorAll(`#${z}T .tr`)].map(r => {
-    const nameInp = r.querySelector('input[type=text]');
-    const timeSel = r.querySelector('.time-select');
-    return { name: nameInp.value.trim(), time: timeSel ? timeSel.value : '' };
-  }).filter(t => t.name);
+// Zoneless roles (Battery Tech) carry no zone — disable the Location field.
+function onRoleChange(sel) {
+  const loc = sel.closest('.tr').querySelector('.loc-select');
+  loc.disabled = ZONELESS_ROLES.includes(sel.value);
+}
+
+function getTechs() {
+  return [...document.querySelectorAll('#techT .tr')].map(r => ({
+    name: r.querySelector('input[type=text]').value.trim(),
+    time: r.querySelector('.time-select').value,
+    role: r.querySelector('.role-select').value,
+    loc:  r.querySelector('.loc-select').value,
+  })).filter(t => t.name);
 }
 
 // ── Tech Late rows ───────────────────────────────────────────────────────────
@@ -427,21 +441,6 @@ function getNCNSTechs() {
 }
 
 
-// ── Toggle section ───────────────────────────────────────────────────────────
-function tog(z) {
-  const on = document.getElementById(z + 'Tog').checked;
-  document.getElementById(z + 'F').classList.toggle('dim', !on);
-}
-
-// ── Section-level zone header ────────────────────────────────────────────────
-// Reads the N/C/S checkboxes on each section card to build the email header.
-function sectionHeader(z) {
-  const zones = [...document.querySelectorAll(`.sec-zone[data-sec="${z}"]:checked`)].map(cb => cb.value);
-  const nameMap = { North: 'Northern', Central: 'Central', South: 'Southern' };
-  if (!zones.length) return { n: 'Northern', c: 'Central', s: 'Southern' }[z] + ' Zones';
-  return zones.map(v => nameMap[v] || v).join('/') + ' Zones';
-}
-
 // ── Helpers ──────────────────────────────────────────────────────────────────
 function radio(n) { const el = document.querySelector(`input[name="${n}"]:checked`); return el ? el.value : ''; }
 function v(id)    { return (document.getElementById(id)?.value || '').trim(); }
@@ -480,7 +479,8 @@ function buildNCNSBody() {
 }
 
 // ── Email builder ────────────────────────────────────────────────────────────
-function buildBody() {
+function buildBody(opts) {
+  const skipIntro = !!(opts && opts.skipIntro);
   const st    = radio('st') || 'Morning';
   const role  = radio('role') || 'nav';
   const dt    = v('dt');
@@ -506,16 +506,18 @@ function buildBody() {
 
   const secs = [];
 
-  // Intro
-  secs.push([
-    `${st} Roadside Schedule ${dt}`,
-    '',
-    `Good ${greet},`,
-    '',
-    `I will be your ${intro} ${word}. ${respond}`,
-    '',
-    'Please restart your phone and log back into Pulsar before the start of your shift.'
-  ].join('\n'));
+  // Intro — omitted on the review screen (the greeting block)
+  if (!skipIntro) {
+    secs.push([
+      `${st} Roadside Schedule ${dt}`,
+      '',
+      `Good ${greet},`,
+      '',
+      `I will be your ${intro} ${word}. ${respond}`,
+      '',
+      'Please restart your phone and log back into Pulsar before the start of your shift.'
+    ].join('\n'));
+  }
 
   // Role line + optional backup
   let roleBlk = `${pfx}: ${sName}${ph}${tm}`;
@@ -527,22 +529,31 @@ function buildBody() {
   }
   secs.push(roleBlk);
 
-  // Zone helper
-  function zone(on, hdr, z) {
-    if (!on) return;
-    const techs = getTechs(z);
-    if (!techs.length) return;
-    const lines = techs.map(t => {
-      const nm = canonicalDisplayName(t.name);
-      return t.time ? `${nm} (${t.time})` : nm;
-    }).join('\n');
-    secs.push(`${hdr}:\n\n${lines}`);
-  }
+  // Technicians — a tech is listed once under EACH single zone they cover, so
+  // a North/Central tech appears under both Northern and Central, and an All
+  // tech appears under all three.  The Monitor's roster parser merges the
+  // repeated names back into one tech with every territory.  Each tech line
+  // stays "Name (time)"; role comes from the section header.
+  //   Road Service Tech -> the zone sections they cover
+  //   Battery Tech      -> single zoneless "Battery Technicians:" section
+  //   Battery Installer  -> "Battery Installers - <Zone> Zones:" per covered zone
+  const techs = getTechs();
+  const techLines = group => group.map(t => {
+    const nm = canonicalDisplayName(t.name);
+    return t.time ? `${nm} (${t.time})` : nm;
+  }).join('\n');
+  const covers = (t, zone) => (ZONE_EXPAND[t.loc] || []).includes(zone);
 
-  zone(document.getElementById('nTog').checked,   sectionHeader('n'), 'n');
-  zone(document.getElementById('cTog').checked,   sectionHeader('c'), 'c');
-  zone(document.getElementById('sTog').checked,   sectionHeader('s'), 's');
-  zone(document.getElementById('batTog').checked, 'Battery Technicians', 'bat');
+  for (const zone of SINGLE_ZONES) {
+    const group = techs.filter(t => t.role === 'Road Service Tech' && covers(t, zone));
+    if (group.length) secs.push(`${SINGLE_HEADER[zone]}\n\n${techLines(group)}`);
+  }
+  const batteryTechs = techs.filter(t => t.role === 'Battery Tech');
+  if (batteryTechs.length) secs.push(`Battery Technicians:\n\n${techLines(batteryTechs)}`);
+  for (const zone of SINGLE_ZONES) {
+    const group = techs.filter(t => t.role === 'Battery Installer' && covers(t, zone));
+    if (group.length) secs.push(`Battery Installers - ${SINGLE_HEADER[zone]}\n\n${techLines(group)}`);
+  }
 
   // Sign-off
   const soLines = ['Stay safe and have a great shift.', '', sName, title, 'Pop-A-Lock of Northern NJ'];
@@ -571,7 +582,7 @@ function defaultTime() { return radio('st') === 'Morning' ? '7am-7pm' : '7pm-7am
 
 // ── Shift-time dropdowns (Schedule tab) ─────────────────────────────────────
 const SHIFT_TIMES = {
-  Morning: ['7am-7pm', '9am-7pm', '12pm-7pm', '4pm-7pm'],
+  Morning: ['7am-7pm', '7am-3pm', '9am-7pm', '12pm-7pm', '4pm-7pm'],
   Night:   ['7pm-7am', '7pm-2am', '7pm-10pm', '7pm-12am', '6am-7am']
 };
 
@@ -632,6 +643,26 @@ function upd() {
 function openGmail() {
   const unknowns = collectUnknowns(scheduleTechInputs());
   if (unknowns.length) { showUnknownsAlert(unknowns, 'Schedule'); return; }
+  showReview();
+}
+
+// ── Schedule review screen ───────────────────────────────────────────────────
+// Shown between the form and Gmail so the navigator can verify the technical
+// content (techs, shifts, roles, zones) before the email goes out.  Omits the
+// "Good evening" greeting block; the actual email Gmail opens is the full body.
+function showReview() {
+  document.getElementById('rvTo').textContent   = allRecipients().join(', ');
+  document.getElementById('rvSub').textContent  = buildSubject();
+  document.getElementById('rvBody').textContent = buildBody({skipIntro: true});
+  document.getElementById('reviewModal').style.display = 'flex';
+}
+
+function closeReview() {
+  document.getElementById('reviewModal').style.display = 'none';
+}
+
+function confirmSendSchedule() {
+  closeReview();
   sendOrQueue('Schedule', buildSubject(), buildBody(), allRecipients());
 }
 
@@ -1046,9 +1077,9 @@ function showUnknownsAlert(unknowns, kind) {
 }
 
 function scheduleTechInputs() {
-  // All zone rows have inputs marked with data-z.  Skips Your Info (sName) and
-  // Backup Manager (bkName) — navigators aren't on the techs sheet.
-  return [...document.querySelectorAll('input[type=text][data-z]')];
+  // All tech rows have inputs marked with data-tech.  Skips Your Info (sName)
+  // and Backup Manager (bkName) — navigators aren't on the techs sheet.
+  return [...document.querySelectorAll('input[type=text][data-tech]')];
 }
 
 function tlTechInputs()    { return [...document.querySelectorAll('#tlT .tr input[type=text]:first-child')]; }
@@ -1237,9 +1268,9 @@ if ('serviceWorker' in navigator) {
   document.querySelector('input[name="role"][value="nav"]').checked  = true;
   document.getElementById('dt').value = fmtDate(new Date());
 
-  // Seed one row per active zone.  Pass focusNew=false so the page
-  // doesn't auto-scroll down to the last-seeded row.
-  addRow('n', false); addRow('c', false); addRow('c', false); addRow('s', false); addRow('bat', false);
+  // Seed a few blank tech rows.  Pass focusNew=false so the page doesn't
+  // auto-scroll down to the last-seeded row.
+  addRow(false); addRow(false); addRow(false);
 
   updateTP();  // set placeholders to match detected shift type
   upd();
