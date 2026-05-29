@@ -529,31 +529,27 @@ function buildBody(opts) {
   }
   secs.push(roleBlk);
 
-  // Technicians — a tech is listed once under EACH single zone they cover, so
-  // a North/Central tech appears under both Northern and Central, and an All
-  // tech appears under all three.  The Monitor's roster parser merges the
-  // repeated names back into one tech with every territory.  Each tech line
-  // stays "Name (time)"; role comes from the section header.
-  //   Road Service Tech -> the zone sections they cover
-  //   Battery Tech      -> single zoneless "Battery Technicians:" section
-  //   Battery Installer  -> "Battery Installers - <Zone> Zones:" per covered zone
+  // Technicians — ONE territory list.  Road Service Techs and Battery
+  // Installers are both listed under the territory section(s) they cover (an
+  // installer is a road tech with extra capability).  A tech covering two/three
+  // zones is listed under each; the Monitor's roster parser merges the repeated
+  // names into one tech with every territory.  Battery Techs are zoneless and
+  // get their own section.  Each line stays "Name (time)" — the installer role
+  // is NOT carried in the email; techs.json is the source of truth for role.
   const techs = getTechs();
   const techLines = group => group.map(t => {
     const nm = canonicalDisplayName(t.name);
     return t.time ? `${nm} (${t.time})` : nm;
   }).join('\n');
   const covers = (t, zone) => (ZONE_EXPAND[t.loc] || []).includes(zone);
+  const ZONED_ROLES = ['Road Service Tech', 'Battery Installer'];
 
   for (const zone of SINGLE_ZONES) {
-    const group = techs.filter(t => t.role === 'Road Service Tech' && covers(t, zone));
+    const group = techs.filter(t => ZONED_ROLES.includes(t.role) && covers(t, zone));
     if (group.length) secs.push(`${SINGLE_HEADER[zone]}\n\n${techLines(group)}`);
   }
   const batteryTechs = techs.filter(t => t.role === 'Battery Tech');
   if (batteryTechs.length) secs.push(`Battery Technicians:\n\n${techLines(batteryTechs)}`);
-  for (const zone of SINGLE_ZONES) {
-    const group = techs.filter(t => t.role === 'Battery Installer' && covers(t, zone));
-    if (group.length) secs.push(`Battery Installers - ${SINGLE_HEADER[zone]}\n\n${techLines(group)}`);
-  }
 
   // Sign-off
   const soLines = ['Stay safe and have a great shift.', '', sName, title, 'Pop-A-Lock of Northern NJ'];
