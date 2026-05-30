@@ -1,3 +1,3 @@
 @echo off
-:: Launch the PAL Schedule Composer (GitHub Pages PWA)
-start "" "https://tomwilliams291.github.io/pal-schedule-composer/"
+:: Launch the PAL Schedule Composer (Cloudflare-hosted PWA)
+start "" "https://schedule.palnnj-tools.com/"
