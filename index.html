@@ -213,6 +213,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
         <input type="checkbox" id="avHasReturn" onchange="toggleExpectedReturn()"> Expected to Return
       </label>
     </div>
+    <div class="hint" id="avReturnHint" style="margin-top:4px;margin-bottom:8px">Expected return is for information only — it does <b>not</b> put the tech back on the schedule. To re-add the tech, send a separate "Available again" update.</div>
     <div class="row"><span class="lbl">Reason</span><input type="text" id="avReason" placeholder="Car repair" oninput="updAvail()"></div>
     <div class="hint" style="margin-top:8px">Use "Unavailable" when a tech goes off mid-shift. Use "Available again" when they return — or to add a new tech mid-shift (fill in Role and shift hours).</div>
   </div>
@@ -774,6 +775,7 @@ function updAvail() {
   if (availType === 'avail') {
     const isAvail = radioAvail() === 'AVAILABLE';
     document.getElementById('avReturnRow').style.display  = isAvail ? 'none' : '';
+    document.getElementById('avReturnHint').style.display = isAvail ? 'none' : '';
     document.getElementById('avRoleRow').style.display     = isAvail ? ''     : 'none';
     document.getElementById('avShiftEndRow').style.display = isAvail ? ''     : 'none';
     document.getElementById('avTimeLabel').textContent     = isAvail ? 'Shift start' : 'Left at';
