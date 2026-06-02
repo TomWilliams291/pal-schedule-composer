@@ -205,6 +205,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
       </div>
     </div>
     <div class="row"><span class="lbl" id="avTimeLabel">Left at</span><input type="text" id="avTime" placeholder="10:30am" oninput="updAvail()" style="max-width:115px"></div>
+    <div class="hint" id="avTimeHint" style="margin-top:4px;margin-bottom:8px">If this time is in the future, the deactivation is scheduled for then. If it's now or in the past, the tech is deactivated immediately.</div>
     <div class="row" id="avShiftEndRow" style="display:none"><span class="lbl">Shift end</span><input type="text" id="avShiftEnd" placeholder="7pm" oninput="updAvail()" style="max-width:115px"></div>
     <div class="row" id="avReturnRow">
       <span class="lbl">Expected return</span>
@@ -776,6 +777,7 @@ function updAvail() {
     const isAvail = radioAvail() === 'AVAILABLE';
     document.getElementById('avReturnRow').style.display  = isAvail ? 'none' : '';
     document.getElementById('avReturnHint').style.display = isAvail ? 'none' : '';
+    document.getElementById('avTimeHint').style.display    = isAvail ? 'none' : '';
     document.getElementById('avRoleRow').style.display     = isAvail ? ''     : 'none';
     document.getElementById('avShiftEndRow').style.display = isAvail ? ''     : 'none';
     document.getElementById('avTimeLabel').textContent     = isAvail ? 'Shift start' : 'Left at';
