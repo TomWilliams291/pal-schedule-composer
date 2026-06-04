@@ -204,8 +204,8 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
         <label><input type="radio" name="avRole" value="locksmith" onchange="updAvail()"> Locksmith</label>
       </div>
     </div>
-    <div class="row"><span class="lbl" id="avTimeLabel">Left at</span><input type="text" id="avTime" placeholder="10:30am" oninput="updAvail()" style="max-width:115px"></div>
-    <div class="hint" id="avTimeHint" style="margin-top:4px;margin-bottom:8px">If this time is in the future, the deactivation is scheduled for then. If it's now or in the past, the tech is deactivated immediately.</div>
+    <div class="row"><span class="lbl" id="avTimeLabel">Effective</span><input type="text" id="avTime" placeholder="10:30am or now" oninput="updAvail()" style="max-width:140px"></div>
+    <div class="hint" id="avTimeHint" style="margin-top:4px;margin-bottom:8px">Enter a clock time later today to schedule the deactivation for then. Enter <b>now</b> (or leave blank) to deactivate immediately. Past times are treated as "now".</div>
     <div class="row" id="avShiftEndRow" style="display:none"><span class="lbl">Shift end</span><input type="text" id="avShiftEnd" placeholder="7pm" oninput="updAvail()" style="max-width:115px"></div>
     <div class="row" id="avReturnRow">
       <span class="lbl">Expected return</span>
@@ -780,7 +780,7 @@ function updAvail() {
     document.getElementById('avTimeHint').style.display    = isAvail ? 'none' : '';
     document.getElementById('avRoleRow').style.display     = isAvail ? ''     : 'none';
     document.getElementById('avShiftEndRow').style.display = isAvail ? ''     : 'none';
-    document.getElementById('avTimeLabel').textContent     = isAvail ? 'Shift start' : 'Left at';
+    document.getElementById('avTimeLabel').textContent     = isAvail ? 'Shift start' : 'Effective';
   }
 }
 
