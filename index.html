@@ -639,6 +639,10 @@ function upd() {
 
 // ── Actions ──────────────────────────────────────────────────────────────────
 function openGmail() {
+  if (countFilled(scheduleTechInputs()) === 0) {
+    showEmptyAlert('Schedule', 'No tech names entered. Add at least one tech to the roster before sending.');
+    return;
+  }
   const unknowns = collectUnknowns(scheduleTechInputs());
   if (unknowns.length) { showUnknownsAlert(unknowns, 'Schedule'); return; }
   showReview();
@@ -793,6 +797,14 @@ function openAvailGmail() {
     inputs = ncnsTechInputs(); kindLabel = 'No Call / No Show';
   } else {
     inputs = [document.getElementById('avTech')]; kindLabel = 'Tech Availability Update';
+  }
+  if (countFilled(inputs) === 0) {
+    const detail = availType === 'avail'
+      ? 'Enter the tech’s name before sending.'
+      : 'Add at least one tech name before sending.';
+    showEmptyAlert(kindLabel, detail);
+    if (availType === 'avail') document.getElementById('avTech').focus();
+    return;
   }
   const unknowns = collectUnknowns(inputs);
   if (unknowns.length) { showUnknownsAlert(unknowns, kindLabel); return; }
@@ -1054,6 +1066,22 @@ function collectUnknowns(inputs) {
     out.push(v);
   }
   return out;
+}
+
+// Count how many of the given inputs have a non-empty trimmed value.  Used to
+// refuse to send an email when no tech name was filled in (otherwise an empty
+// avTech, or an empty Tech-Late / NCNS list, would silently send a name-less
+// email — collectUnknowns skips empty values by design).
+function countFilled(inputs) {
+  return inputs.filter(inp => ((inp && inp.value) || '').trim()).length;
+}
+
+function showEmptyAlert(kind, detail) {
+  alert(
+    `CANNOT SEND — ${kind} email has no tech name.\n\n`
+    + (detail || 'Add at least one tech name and try again.') + '\n\n'
+    + `Nothing has been sent.`
+  );
 }
 
 function showUnknownsAlert(unknowns, kind) {
