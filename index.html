@@ -170,6 +170,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="row">
       <div class="rg">
         <label><input type="radio" name="availType" value="avail" checked onchange="setAvailType('avail')"> Availability Update</label>
+        <label><input type="radio" name="availType" value="add" onchange="setAvailType('add')"> Add Tech</label>
         <label><input type="radio" name="availType" value="tl" onchange="setAvailType('tl')"> Tech Late</label>
         <label><input type="radio" name="availType" value="ncns" onchange="setAvailType('ncns')"> No Call / No Show</label>
       </div>
@@ -235,6 +236,38 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
       <div class="hint" style="margin-bottom:8px">Enter each tech who did not show up. Only the name is used — the time field is optional.</div>
       <div id="ncnsT"></div>
       <button class="addrow" onclick="addNCNSRow()">+ Add tech</button>
+    </div>
+  </div>
+
+  <div id="addPanel" style="display:none">
+    <div class="card">
+      <div class="ct">Add Tech &mdash; mid-shift, part of the day</div>
+      <div class="hint" style="margin-bottom:11px">Adds one tech to the live schedule for a set window when you get busy &mdash; no need to redo the whole schedule. The router starts using them at the <b>Start time</b> and automatically drops them at the <b>End time</b>.</div>
+      <div class="row"><span class="lbl">Tech name</span><input type="text" list="techNames" id="addTech" placeholder="Carlos Rivera" oninput="updAvail()"></div>
+      <div class="row">
+        <span class="lbl">Role</span>
+        <div class="rg">
+          <label><input type="radio" name="addRole" value="rs" checked onchange="addRoleChange();updAvail()"> RS Tech</label>
+          <label><input type="radio" name="addRole" value="battery_tech" onchange="addRoleChange();updAvail()"> Battery Tech</label>
+          <label><input type="radio" name="addRole" value="battery_installer" onchange="addRoleChange();updAvail()"> Battery Installer</label>
+        </div>
+      </div>
+      <div class="row" id="addTerrRow">
+        <span class="lbl">Territory</span>
+        <div class="rg">
+          <label><input type="checkbox" id="addTerrN" value="North"   onchange="updAvail()"> North</label>
+          <label><input type="checkbox" id="addTerrC" value="Central" onchange="updAvail()"> Central</label>
+          <label><input type="checkbox" id="addTerrS" value="South"   onchange="updAvail()"> South</label>
+        </div>
+      </div>
+      <div class="row">
+        <span class="lbl">Start time</span>
+        <input type="text" id="addStart" placeholder="3pm or now" oninput="updAvail()" style="max-width:120px">
+        <span class="lbl" style="min-width:56px;margin-left:14px">End time</span>
+        <input type="text" id="addEnd" placeholder="7pm" oninput="updAvail()" style="max-width:120px">
+      </div>
+      <div class="hint" style="margin-top:4px;margin-bottom:8px">Start can be a clock time (<b>3pm</b>) or <b>now</b>. End is required &mdash; the tech is removed from routing at the End time.</div>
+      <div class="row"><span class="lbl">Reason</span><input type="text" id="addReason" placeholder="Dinner rush coverage" oninput="updAvail()"></div>
     </div>
   </div>
 
@@ -709,9 +742,64 @@ function setAvailType(mode) {
   document.getElementById('availForm').style.display  = mode === 'avail' ? '' : 'none';
   document.getElementById('tlPanel').style.display    = mode === 'tl'    ? '' : 'none';
   document.getElementById('ncnsPanel').style.display  = mode === 'ncns'  ? '' : 'none';
+  document.getElementById('addPanel').style.display   = mode === 'add'   ? '' : 'none';
   if (mode === 'tl'   && !document.querySelector('#tlT .tr'))   addTLRow();
   if (mode === 'ncns' && !document.querySelector('#ncnsT .tr')) addNCNSRow();
+  if (mode === 'add') addRoleChange();
   updAvail();
+}
+
+// Battery Tech is zoneless — dim its Territory row (kept consistent with the
+// Schedule tab's ZONELESS_ROLES handling).  RS Techs and Battery Installers
+// carry a zone.
+function addRoleChange() {
+  const role = addRoleValue();
+  const terrRow = document.getElementById('addTerrRow');
+  if (terrRow) terrRow.classList.toggle('dim', role === 'battery_tech');
+}
+
+function addRoleValue() {
+  const el = document.querySelector('input[name="addRole"]:checked');
+  return el ? el.value : 'rs';
+}
+
+function getAddTerritories() {
+  const vals = ['addTerrN','addTerrC','addTerrS']
+    .filter(id => document.getElementById(id)?.checked)
+    .map(id => document.getElementById(id).value);
+  return vals.join(', ');
+}
+
+// Build the "Add Tech" email.  It is a TECH AVAILABILITY UPDATE with
+// Status: AVAILABLE and a Role — exactly the shape the Monitor's shift
+// watcher turns into a brand-new roster entry (navigator/shift_watcher.py).
+// Effective -> shift start, Shift End -> shift end; the router pools the tech
+// only inside that window and drops them at the end.
+function buildAddSubject() {
+  const tech = canonicalDisplayName(v('addTech')) || 'Tech';
+  const dt   = v('dt');
+  return `Tech Availability Update - AVAILABLE - ${tech} - ${dt}`;
+}
+
+function buildAddBody() {
+  const tech      = canonicalDisplayName(v('addTech'));
+  const role      = addRoleValue();
+  const territory = getAddTerritories();
+  const start     = v('addStart');
+  const end       = v('addEnd');
+  const reason    = v('addReason');
+  const lines = [
+    'TECH AVAILABILITY UPDATE',
+    '',
+    `Tech: ${tech || '(enter name)'}`,
+    'Status: AVAILABLE',
+  ];
+  if (role !== 'battery_tech' && territory) lines.push(`Territory: ${territory}`);
+  lines.push(`Role: ${role}`);
+  if (start) lines.push(`Effective: ${start}`);
+  if (end)   lines.push(`Shift End: ${end}`);
+  if (reason) lines.push(`Reason: ${reason}`);
+  return lines.join('\n');
 }
 
 function radioAvail() {
@@ -738,6 +826,7 @@ function getSelectedTerritories() {
 }
 
 function buildAvailSubject() {
+  if (availType === 'add')  return buildAddSubject();
   if (availType === 'tl')   return 'Tech Late';
   if (availType === 'ncns') return 'No Call No Show';
   const tech   = v('avTech') || 'Tech';
@@ -747,6 +836,7 @@ function buildAvailSubject() {
 }
 
 function buildAvailBody() {
+  if (availType === 'add')  return buildAddBody();
   if (availType === 'tl')   return buildTLBody();
   if (availType === 'ncns') return buildNCNSBody();
   const tech      = v('avTech');
@@ -795,6 +885,8 @@ function openAvailGmail() {
     inputs = tlTechInputs(); kindLabel = 'Tech Late';
   } else if (availType === 'ncns') {
     inputs = ncnsTechInputs(); kindLabel = 'No Call / No Show';
+  } else if (availType === 'add') {
+    inputs = [document.getElementById('addTech')]; kindLabel = 'Add Tech';
   } else {
     inputs = [document.getElementById('avTech')]; kindLabel = 'Tech Availability Update';
   }
@@ -808,6 +900,25 @@ function openAvailGmail() {
   }
   const unknowns = collectUnknowns(inputs);
   if (unknowns.length) { showUnknownsAlert(unknowns, kindLabel); return; }
+  // Add Tech: a bounded mid-shift add needs a start, an end (hard stop), and —
+  // for a zoned role — at least one territory.  Without a Role or times the
+  // Monitor either can't create the tech or leaves them with no window.
+  if (availType === 'add') {
+    const role  = addRoleValue();
+    const terr  = getAddTerritories();
+    const start = v('addStart');
+    const end   = v('addEnd');
+    const problems = [];
+    if (!start) problems.push('Start time is required (a clock time like 3pm, or "now").');
+    if (!end)   problems.push('End time is required — the tech is dropped from routing then.');
+    if (role !== 'battery_tech' && !terr)
+      problems.push('Select at least one Territory (North / Central / South).');
+    if (problems.length) {
+      alert('CANNOT SEND — Add Tech is missing required info:\n\n   •  '
+        + problems.join('\n   •  ') + '\n\nNothing has been sent.');
+      return;
+    }
+  }
   // Expected-to-Return: if checked, the time must be filled in.
   if (availType === 'avail' && radioAvail() === 'UNAVAILABLE'
       && document.getElementById('avHasReturn').checked
