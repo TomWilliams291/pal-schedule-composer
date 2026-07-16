@@ -1751,12 +1751,26 @@ window.addEventListener('online',  () => {
 window.addEventListener('offline', updateRosterBanner);
 
 // ── Service worker registration ──────────────────────────────────────────────
+// On the hosted site we register the service worker so the app works offline.
+// On a local test server (localhost / 127.0.0.1 / file://) we deliberately do
+// NOT cache — and we actively unregister any existing worker and clear its
+// caches — so code edits show up on a normal refresh instead of being masked
+// by a stale cached copy.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js').catch(err => {
-      console.warn('Service worker registration failed:', err);
+  const isLocalTest = ['localhost', '127.0.0.1', ''].includes(location.hostname);
+  if (isLocalTest) {
+    navigator.serviceWorker.getRegistrations()
+      .then(rs => rs.forEach(r => r.unregister())).catch(() => {});
+    if (window.caches && caches.keys) {
+      caches.keys().then(ks => ks.forEach(k => caches.delete(k))).catch(() => {});
+    }
+  } else {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(err => {
+        console.warn('Service worker registration failed:', err);
+      });
     });
-  });
+  }
 }
 
 // ── Init ─────────────────────────────────────────────────────────────────────
