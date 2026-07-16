@@ -1310,7 +1310,8 @@ function initNoticeTabs() {
     shiftSel.appendChild(o);
   }
   const pctSel = document.getElementById('bonusPct');
-  for (let p = 10; p <= 100; p += 10) {
+  const pcts = [5, ...Array.from({length: 10}, (_, i) => (i + 1) * 10)];  // 5, 10, 20 … 100
+  for (const p of pcts) {
     const o = document.createElement('option');
     o.value = String(p); o.textContent = `${p}%`;
     pctSel.appendChild(o);
