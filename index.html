@@ -1051,11 +1051,14 @@ function copyAvailBody() {
 // the specification — do not paraphrase the boilerplate.
 const NOTICE_MANAGER = 'jason.oppenberg@popalocknj.com';
 
-const MGMT_BOILER =
-  'This notification is being sent to you and your manager. We wanted to let you '
-  + 'know that your performance has not met the minimum standards of the job, as '
-  + 'identified during your hiring process. Your bonus opportunity may be impacted '
-  + 'if you do not correct these issues.';
+const MGMT_INTRO =
+  'This notice is being shared with you and your manager.\n\n'
+  + 'Your current performance does not meet the minimum standards required for '
+  + 'your role. Each requirement has been discussed and explained to you during '
+  + 'your job training.';
+const MGMT_CLOSING =
+  'If these issues are not corrected, your bonus eligibility may be affected.';
+const MGMT_BOILER_DISPLAY = MGMT_INTRO + '\n\n' + MGMT_CLOSING;
 
 function bonusBoilerText(pct) {
   return 'This notification is being sent to you and your manager. Your performance '
@@ -1130,25 +1133,24 @@ function mgmtRecipients() {
 }
 
 function buildMgmtSubject() {
-  const nm = v('mgmtTech');
-  return `Management Notice - ${nm || '(tech)'}`;
+  return 'Performance Notice';
 }
 
 function buildMgmtBody() {
   const nm    = v('mgmtTech');
   const first = firstNameOf(nm) || '(tech)';
   const items = [...document.querySelectorAll('.mgmt-item:checked')].map(cb => cb.value);
-  const lines = [`Dear ${first},`, '', MGMT_BOILER];
+  const lines = [`Dear ${first},`, '', MGMT_INTRO];
   if (items.length) {
     lines.push('', 'The following items have been identified:', '');
     items.forEach(i => lines.push(`   •  ${i}`));
   }
-  lines.push('', 'Pop-A-Lock of Northern NJ');
+  lines.push('', MGMT_CLOSING, '', 'Pop-A-Lock of Northern NJ');
   return lines.join('\n');
 }
 
 function updMgmt() {
-  document.getElementById('mgmtBoiler').textContent = MGMT_BOILER;
+  document.getElementById('mgmtBoiler').textContent = MGMT_BOILER_DISPLAY;
   document.getElementById('mgmtPvBody').textContent = buildMgmtBody();
   document.getElementById('mgmtPvSub').textContent  = buildMgmtSubject();
   const to = mgmtRecipients();
