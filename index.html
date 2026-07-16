@@ -1061,12 +1061,13 @@ const MGMT_CLOSING =
 const MGMT_BOILER_DISPLAY = MGMT_INTRO + '\n\n' + MGMT_CLOSING;
 
 // Bonus Impact reuses the Performance Notice intro (MGMT_INTRO); only the
-// closing differs — it names the percentage reduction and warns of further
-// reductions.
-function bonusClosingText(pct) {
-  return `Your bonus opportunity will be impacted by ${pct}. `
-    + 'Failure to correct these deficiencies may result in further bonus reductions.';
+// closing differs — a line naming the percentage reduction, then the
+// further-reductions warning as its own last line.
+function bonusImpactLine(pct) {
+  return `Your bonus opportunity will be impacted by ${pct}.`;
 }
+const BONUS_FAILURE_LINE =
+  'Failure to correct these deficiencies may result in further bonus reductions.';
 
 // All shift windows (Morning + Night) for the "missed shift" dropdown.
 const ALL_SHIFTS = [...SHIFT_TIMES.Morning, ...SHIFT_TIMES.Night];
@@ -1166,6 +1167,20 @@ function openMgmtGmail() {
     return;
   }
   sendOrQueue('Management Notice', buildMgmtSubject(), buildMgmtBody(), mgmtRecipients());
+  resetMgmtForm();
+}
+
+// Clear the form after sending so the next tech starts blank and one tech's
+// selections can't carry over to another.  Manager email returns to its
+// default rather than blank (it's not tech-specific).
+function resetMgmtForm() {
+  document.getElementById('mgmtTech').value = '';
+  document.getElementById('mgmtEmail').value = '';
+  document.getElementById('mgmtMgrEmail').value = NOTICE_MANAGER;
+  document.querySelectorAll('#mgmtTab input[type=checkbox]').forEach(cb => {
+    cb.checked = false; toggleNoticeItem(cb);
+  });
+  updMgmt();
 }
 
 function copyMgmtBody() {
@@ -1228,13 +1243,13 @@ function buildBonusBody() {
     lines.push('', 'The following items have been identified:', '');
     items.forEach(i => lines.push(`   •  ${i}`));
   }
-  lines.push('', bonusClosingText(pct), '', 'Pop-A-Lock of Northern NJ');
+  lines.push('', bonusImpactLine(pct), '', BONUS_FAILURE_LINE, '', 'Pop-A-Lock of Northern NJ');
   return lines.join('\n');
 }
 
 function updBonus() {
   const pct = v('bonusPct') ? `${v('bonusPct')}%` : '____%';
-  document.getElementById('bonusBoiler').textContent = MGMT_INTRO + '\n\n' + bonusClosingText(pct);
+  document.getElementById('bonusBoiler').textContent = MGMT_INTRO + '\n\n' + bonusImpactLine(pct) + '\n\n' + BONUS_FAILURE_LINE;
   document.getElementById('bUnavailXlabel').textContent = v('bUnavailMinVal') || 'X';
   document.getElementById('bonusPvBody').textContent = buildBonusBody();
   document.getElementById('bonusPvSub').textContent  = buildBonusSubject();
@@ -1257,6 +1272,25 @@ function openBonusGmail() {
     return;
   }
   sendOrQueue('Bonus Impact', buildBonusSubject(), buildBonusBody(), bonusRecipients());
+  resetBonusForm();
+}
+
+// Clear the form after sending so the next tech starts blank.  Manager email
+// returns to its default; the grayed extra fields are re-disabled.
+function resetBonusForm() {
+  document.getElementById('bonusTech').value = '';
+  document.getElementById('bonusEmail').value = '';
+  document.getElementById('bonusMgrEmail').value = NOTICE_MANAGER;
+  document.getElementById('bonusPct').value = '';
+  document.querySelectorAll('#bonusTab input[type=checkbox]').forEach(cb => {
+    cb.checked = false; toggleNoticeItem(cb);
+  });
+  document.getElementById('bMissedShiftTime').value = '';
+  document.getElementById('bMissedCallTime').value = '';
+  document.getElementById('bMissedCallCity').value = '';
+  document.getElementById('bUnavailMinVal').value = '';
+  toggleBonusExtras();
+  updBonus();
 }
 
 function copyBonusBody() {
