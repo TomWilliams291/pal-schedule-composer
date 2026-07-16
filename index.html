@@ -329,7 +329,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="pv-meta">To: <b id="mgmtPvTo"></b></div>
     <div class="pv-meta">Subject: <b id="mgmtPvSub"></b></div>
     <div id="mgmtPvBody" class="pvbody"></div>
-    <button class="sendbtn" onclick="openMgmtGmail()">&#9993; Open in Gmail</button>
+    <button class="sendbtn" onclick="openMgmtGmail(this)">&#9993; Send from PAL&nbsp;NNJ&nbsp;Pay</button>
     <button class="cpybtn" id="mgmtCpyBtn" onclick="copyMgmtBody()">Copy email body</button>
   </div>
 </div>
@@ -382,7 +382,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="pv-meta">To: <b id="bonusPvTo"></b></div>
     <div class="pv-meta">Subject: <b id="bonusPvSub"></b></div>
     <div id="bonusPvBody" class="pvbody"></div>
-    <button class="sendbtn" onclick="openBonusGmail()">&#9993; Open in Gmail</button>
+    <button class="sendbtn" onclick="openBonusGmail(this)">&#9993; Send from PAL&nbsp;NNJ&nbsp;Pay</button>
     <button class="cpybtn" id="bonusCpyBtn" onclick="copyBonusBody()">Copy email body</button>
   </div>
 </div>
@@ -1051,6 +1051,65 @@ function copyAvailBody() {
 // the specification — do not paraphrase the boilerplate.
 const NOTICE_MANAGER = 'jason.oppenberg@popalocknj.com';
 
+// ── Notice sender (Management Notice + Bonus Impact only) ─────────────────────
+// Unlike the schedule/availability tabs, these two do NOT open Gmail.  They POST
+// the message to a Google Apps Script web app that runs under the
+// palnnjpay@gmail.com account, so the email is genuinely SENT AS palnnjpay:
+// replies route back to that mailbox and a copy is kept in its Sent folder.
+// Setup + source: AutoNav/palnnjpay_mailer/ in the AI Navigator repo.
+const NOTICE_MAILER_URL   = 'https://script.google.com/macros/s/AKfycbyPTLE2-JCHqg5R76NWT_LdiSuV3FORXjcwKR5BZZl_GTiEa3VrR10L7ZhUmF19-QJX/exec';
+const NOTICE_MAILER_TOKEN = 'pnp_9f3kQ2xL7vBt4mZs';  // light shared gate; matches Code.gs
+
+// Disable a button and show a transient label while an async send is in flight;
+// returns a function that restores the original text/enabled state.
+function setBtnBusy(btn, label) {
+  if (!btn) return () => {};
+  const text = btn.textContent, disabled = btn.disabled;
+  btn.disabled = true; btn.textContent = label;
+  return () => { btn.disabled = disabled; btn.textContent = text; };
+}
+
+// POST one notice to the palnnjpay mailer.  Tech goes on To, manager on Cc
+// ("...directly to the tech, copying the manager").  Shows its own alert for
+// every outcome and returns true ONLY on a confirmed send, so the caller keeps
+// the form intact whenever anything is uncertain — nothing is silently lost.
+async function sendNotice(kind, toAddr, ccAddr, subject, body, btn) {
+  if (!navigator.onLine) {
+    alert('CANNOT SEND — no internet connection.\n\n'
+      + 'The ' + kind + ' is sent directly from palnnjpay@gmail.com, which needs\n'
+      + 'a connection. Reconnect and click Send again.\n\nNothing has been sent.');
+    return false;
+  }
+  const to = [toAddr].filter(Boolean);
+  const cc = [ccAddr].filter(Boolean);
+  const restore = setBtnBusy(btn, '… Sending');
+  try {
+    const res = await fetch(NOTICE_MAILER_URL, {
+      method: 'POST',
+      // Plain-text body (fetch's default for a string) avoids a CORS preflight
+      // that Apps Script can't answer.  The script parses the JSON itself.
+      body: JSON.stringify({ token: NOTICE_MAILER_TOKEN, to, cc, subject, body }),
+    });
+    const data = await res.json().catch(() => null);
+    if (data && data.ok) {
+      alert('Sent ✓\n\nThe ' + kind + ' was sent from palnnjpay@gmail.com to:\n\n   •  '
+        + to.concat(cc).join('\n   •  ')
+        + '\n\nA copy is in the palnnjpay Sent folder. Replies come back to palnnjpay.');
+      return true;
+    }
+    const why = (data && data.error) ? data.error : ('unexpected reply (HTTP ' + res.status + ')');
+    alert('NOT SENT — the mail service rejected it:\n\n   ' + why
+      + '\n\nNothing has been sent. Fix the issue and try again.');
+    return false;
+  } catch (e) {
+    alert('NOT SENT — could not reach the mail service:\n\n   ' + e
+      + '\n\nCheck your connection and try again. Nothing has been sent.');
+    return false;
+  } finally {
+    restore();
+  }
+}
+
 const MGMT_INTRO =
   'This notice is being shared with you and your manager.\n\n'
   + 'Your current performance does not meet the minimum standards required for '
@@ -1161,7 +1220,7 @@ function updMgmt() {
   document.getElementById('mgmtPvTo').textContent   = to.length ? to.join(', ') : '(tech email)';
 }
 
-function openMgmtGmail() {
+async function openMgmtGmail(btn) {
   const problems = [];
   if (!v('mgmtTech'))  problems.push('Select a tech.');
   if (!v('mgmtEmail')) problems.push('Enter the tech’s email address.');
@@ -1172,8 +1231,10 @@ function openMgmtGmail() {
       + problems.join('\n   •  ') + '\n\nNothing has been sent.');
     return;
   }
-  sendOrQueue('Management Notice', buildMgmtSubject(), buildMgmtBody(), mgmtRecipients());
-  resetMgmtForm();
+  const sent = await sendNotice('Management Notice',
+    v('mgmtEmail'), v('mgmtMgrEmail'),
+    buildMgmtSubject(), buildMgmtBody(), btn);
+  if (sent) resetMgmtForm();
 }
 
 // Clear the form after sending so the next tech starts blank and one tech's
@@ -1280,7 +1341,7 @@ function updBonus() {
   document.getElementById('bonusPvTo').textContent   = to.length ? to.join(', ') : '(tech email)';
 }
 
-function openBonusGmail() {
+async function openBonusGmail(btn) {
   const problems = [];
   if (!v('bonusTech'))  problems.push('Select a tech.');
   if (!v('bonusEmail')) problems.push('Enter the tech’s email address.');
@@ -1294,8 +1355,10 @@ function openBonusGmail() {
       + problems.join('\n   •  ') + '\n\nNothing has been sent.');
     return;
   }
-  sendOrQueue('Bonus Impact', buildBonusSubject(), buildBonusBody(), bonusRecipients());
-  resetBonusForm();
+  const sent = await sendNotice('Bonus Impact',
+    v('bonusEmail'), v('bonusMgrEmail'),
+    buildBonusSubject(), buildBonusBody(), btn);
+  if (sent) resetBonusForm();
 }
 
 // Clear the form after sending so the next tech starts blank.  Manager email
