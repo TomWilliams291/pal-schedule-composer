@@ -302,7 +302,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 
   <div class="card">
     <div class="ct">Management Notice</div>
-    <div class="row"><span class="lbl">Tech</span><select id="mgmtTech" onchange="updMgmt()"><option value="">&mdash; select tech &mdash;</option></select></div>
+    <div class="row"><span class="lbl">Tech</span><select id="mgmtTech" onchange="onMgmtTechChange();updMgmt()"><option value="">&mdash; select tech &mdash;</option></select></div>
     <div class="row"><span class="lbl">Tech email</span><input type="text" id="mgmtEmail" placeholder="tech@example.com" oninput="updMgmt()"></div>
     <div class="row"><span class="lbl">Manager email</span><input type="text" id="mgmtMgrEmail" oninput="updMgmt()"></div>
     <div class="hint" style="margin-top:2px">Sent from the AutoNav account directly to the tech, copying the manager.</div>
@@ -344,7 +344,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 
   <div class="card">
     <div class="ct">Bonus Impact</div>
-    <div class="row"><span class="lbl">Tech</span><select id="bonusTech" onchange="updBonus()"><option value="">&mdash; select tech &mdash;</option></select></div>
+    <div class="row"><span class="lbl">Tech</span><select id="bonusTech" onchange="onBonusTechChange();updBonus()"><option value="">&mdash; select tech &mdash;</option></select></div>
     <div class="row"><span class="lbl">Tech email</span><input type="text" id="bonusEmail" placeholder="tech@example.com" oninput="updBonus()"></div>
     <div class="row"><span class="lbl">Manager email</span><input type="text" id="bonusMgrEmail" oninput="updBonus()"></div>
     <div class="row"><span class="lbl">Bonus impact</span><select id="bonusPct" onchange="updBonus()" style="max-width:110px"><option value="">&mdash; % &mdash;</option></select></div>
@@ -360,7 +360,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="ct">Performance problems to include &mdash; highlighted items are sent</div>
     <div class="hint" style="margin-bottom:9px">Check each problem that applies. Only the highlighted problems appear in the email.</div>
 
-    <label class="notice-item"><input type="checkbox" id="bMissedShift" onchange="toggleNoticeItem(this);toggleBonusExtras();updBonus()"><span>A missed shift</span></label>
+    <label class="notice-item"><input type="checkbox" id="bMissedShift" onchange="toggleNoticeItem(this);toggleBonusExtras();updBonus()"><span>A missed shift (no call, no show)</span></label>
     <div class="notice-extra row"><span class="lbl" style="min-width:64px">Shift</span><select id="bMissedShiftTime" onchange="updBonus()" disabled style="max-width:160px"><option value="">&mdash; select shift &mdash;</option></select></div>
 
     <label class="notice-item"><input type="checkbox" id="bMissedCall" onchange="toggleNoticeItem(this);toggleBonusExtras();updBonus()"><span>A missed call</span></label>
@@ -1076,6 +1076,27 @@ function firstNameOf(full) {
   return s ? s.split(/\s+/)[0] : '';
 }
 
+// Look up a tech's email from the roster sheet's Email column, matching on
+// canonical name or any alias.  Returns '' when unknown (e.g. an old cached
+// roster from before the Email column existed) — the navigator can still type
+// it by hand.
+function techEmailFor(name) {
+  const nl = (name || '').trim().toLowerCase();
+  if (!nl) return '';
+  for (const t of roster) {
+    if (t.name.toLowerCase() === nl) return t.email || '';
+    for (const a of (t.aliases || [])) {
+      if (a.toLowerCase() === nl) return t.email || '';
+    }
+  }
+  return '';
+}
+
+// When a tech is picked from the dropdown, auto-fill their email from the
+// roster.  Clearing the selection clears the field.
+function onMgmtTechChange()  { document.getElementById('mgmtEmail').value  = techEmailFor(v('mgmtTech')); }
+function onBonusTechChange() { document.getElementById('bonusEmail').value = techEmailFor(v('bonusTech')); }
+
 // Highlight a checked notice item so the navigator can see at a glance which
 // lines will be sent ("only the highlighted ones are used").
 function toggleNoticeItem(cb) {
@@ -1180,7 +1201,7 @@ function bonusItems() {
   const items = [];
   if (document.getElementById('bMissedShift').checked) {
     const s = v('bMissedShiftTime');
-    items.push('A missed shift' + (s ? ` (${s})` : ''));
+    items.push('A missed shift ' + (s ? `(${s}, no call, no show)` : '(no call, no show)'));
   }
   if (document.getElementById('bMissedCall').checked) {
     const t = v('bMissedCallTime'), c = v('bMissedCallCity');
@@ -1389,6 +1410,7 @@ function parseCsv(text) {
   const ixName    = header.findIndex(h => h.includes('name'));
   const ixRole    = header.findIndex(h => h.includes('role'));
   const ixAliases = header.findIndex(h => h.includes('alias'));
+  const ixEmail   = header.findIndex(h => h.includes('email'));
   if (ixName < 0) return [];
   const out = [];
   for (let i = 1; i < rows.length; i++) {
@@ -1399,7 +1421,8 @@ function parseCsv(text) {
     const aliases = ixAliases >= 0
       ? (r[ixAliases] || '').split(',').map(s => s.trim()).filter(Boolean)
       : [];
-    out.push({name, role: role === 'battery' ? 'battery' : 'road', aliases});
+    const email = ixEmail >= 0 ? (r[ixEmail] || '').trim() : '';
+    out.push({name, role: role === 'battery' ? 'battery' : 'road', aliases, email});
   }
   return out;
 }
