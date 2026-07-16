@@ -316,9 +316,9 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
   <div class="card">
     <div class="ct">Issues to include &mdash; highlighted items are sent</div>
     <div class="hint" style="margin-bottom:9px">Check each issue that applies. Only the highlighted issues appear in the email.</div>
-    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to be logged into Pulsar app with location active" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to be logged into Pulsar app with location active</span></label>
-    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to respond at the start of your shift, as indicated in the schedule" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to respond at the start of your shift, as indicated in the schedule</span></label>
-    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Not answering your phone when called" onchange="toggleNoticeItem(this);updMgmt()"><span>Not answering your phone when called</span></label>
+    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to be logged into Pulsar app with location active" data-short="not logged into Pulsar" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to be logged into Pulsar app with location active</span></label>
+    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to respond at the start of your shift, as indicated in the schedule" data-short="no shift-start response" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to respond at the start of your shift, as indicated in the schedule</span></label>
+    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Not answering your phone when called" data-short="no phone answer" onchange="toggleNoticeItem(this);updMgmt()"><span>Not answering your phone when called</span></label>
   </div>
 
 </div><!-- /form -->
@@ -453,7 +453,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 
 <script>
 history.scrollRestoration = 'manual';
-const FIXED = ['palautonav@gmail.com','palnnjpay@gmail.com','jason.oppenberg@popalocknj.com','Philip.Allan@PopALockNJ.com','help@houston-dispatch.com'];
+const FIXED = ['palautonav@gmail.com','jason.oppenberg@popalocknj.com','Philip.Allan@PopALockNJ.com','help@houston-dispatch.com'];
 const DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 let rowCtr  = 0;
 let tlCtr   = 0, ncnsCtr = 0;
@@ -1130,8 +1130,14 @@ function mgmtRecipients() {
   return [v('mgmtEmail'), v('mgmtMgrEmail')].filter(Boolean);
 }
 
+// Subject summarizes the issues so the recipient can act without opening the
+// email: "Tech Name - issue, issue".  Falls back to the name alone when
+// nothing is checked yet (a name-only subject never actually sends — the
+// validation requires at least one issue).
 function buildMgmtSubject() {
-  return 'Performance Notice';
+  const nm = v('mgmtTech') || '(tech)';
+  const labels = [...document.querySelectorAll('.mgmt-item:checked')].map(cb => cb.dataset.short);
+  return labels.length ? `${nm} - ${labels.join(', ')}` : nm;
 }
 
 function buildMgmtBody() {
@@ -1196,8 +1202,25 @@ function bonusRecipients() {
   return [v('bonusEmail'), v('bonusMgrEmail')].filter(Boolean);
 }
 
+// Short subject labels, in the same order as the body bullets.
+function bonusSubjectLabels() {
+  const out = [];
+  if (document.getElementById('bMissedShift').checked) out.push('no-show');
+  if (document.getElementById('bMissedCall').checked)  out.push('missed call');
+  if (document.getElementById('bRefusal').checked)     out.push('call refusal');
+  if (document.getElementById('bUnavailSvc').checked)  out.push('unavailable');
+  if (document.getElementById('bInaccurate').checked)  out.push('inaccurate status');
+  if (document.getElementById('bUnavailMin').checked) {
+    const m = v('bUnavailMinVal');
+    out.push(`unavailable >${m || 'X'} min`);
+  }
+  return out;
+}
+
 function buildBonusSubject() {
-  return 'Performance Notice';
+  const nm = v('bonusTech') || '(tech)';
+  const labels = bonusSubjectLabels();
+  return labels.length ? `${nm} - ${labels.join(', ')}` : nm;
 }
 
 // Enable/disable the grayed extra fields based on their parent checkbox.
