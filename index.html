@@ -1060,16 +1060,13 @@ const MGMT_CLOSING =
   'If these issues are not corrected, your bonus eligibility may be affected.';
 const MGMT_BOILER_DISPLAY = MGMT_INTRO + '\n\n' + MGMT_CLOSING;
 
-function bonusBoilerText(pct) {
-  return 'This notification is being sent to you and your manager. Your performance '
-    + 'has not met the minimum requirements of the job as described during your '
-    + 'training. Your bonus opportunity will be impacted by ' + pct + '.';
+// Bonus Impact reuses the Performance Notice intro (MGMT_INTRO); only the
+// closing differs — it names the percentage reduction and warns of further
+// reductions.
+function bonusClosingText(pct) {
+  return `Your bonus opportunity will be impacted by ${pct}. `
+    + 'Failure to correct these deficiencies may result in further bonus reductions.';
 }
-
-const BONUS_CLOSING =
-  'Failure to correct the performance problems identified here will result in '
-  + 'further bonus impacts and could result in full loss of your bonus eligibility '
-  + 'for this period.';
 
 // All shift windows (Morning + Night) for the "missed shift" dropdown.
 const ALL_SHIFTS = [...SHIFT_TIMES.Morning, ...SHIFT_TIMES.Night];
@@ -1185,8 +1182,7 @@ function bonusRecipients() {
 }
 
 function buildBonusSubject() {
-  const nm = v('bonusTech');
-  return `Bonus Impact Notice - ${nm || '(tech)'}`;
+  return 'Performance Notice';
 }
 
 // Enable/disable the grayed extra fields based on their parent checkbox.
@@ -1227,18 +1223,18 @@ function buildBonusBody() {
   const first = firstNameOf(nm) || '(tech)';
   const pct   = v('bonusPct') ? `${v('bonusPct')}%` : '____%';
   const items = bonusItems();
-  const lines = [`Dear ${first},`, '', bonusBoilerText(pct)];
+  const lines = [`Dear ${first},`, '', MGMT_INTRO];
   if (items.length) {
-    lines.push('', 'The following performance problems have been identified:', '');
+    lines.push('', 'The following items have been identified:', '');
     items.forEach(i => lines.push(`   •  ${i}`));
   }
-  lines.push('', BONUS_CLOSING, '', 'Pop-A-Lock of Northern NJ');
+  lines.push('', bonusClosingText(pct), '', 'Pop-A-Lock of Northern NJ');
   return lines.join('\n');
 }
 
 function updBonus() {
   const pct = v('bonusPct') ? `${v('bonusPct')}%` : '____%';
-  document.getElementById('bonusBoiler').textContent = bonusBoilerText(pct);
+  document.getElementById('bonusBoiler').textContent = MGMT_INTRO + '\n\n' + bonusClosingText(pct);
   document.getElementById('bUnavailXlabel').textContent = v('bUnavailMinVal') || 'X';
   document.getElementById('bonusPvBody').textContent = buildBonusBody();
   document.getElementById('bonusPvSub').textContent  = buildBonusSubject();
