@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>PAL Roadside Schedule Composer V2.2</title>
+<title>PAL Roadside Schedule Composer V2.3</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
 <link rel="icon" sizes="any" href="favicon.ico">
@@ -69,12 +69,18 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 .modal-box{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:18px;max-width:560px;width:100%}
 .modal-box .pv-hdr{font-size:13px;margin-bottom:12px}
 .rv-note{font-size:11px;color:#7a8a9a;margin:8px 0 0}
+.notice-bp{font-size:12.5px;color:#c8d4e0;line-height:1.6;background:#0d1b2a;border:1px solid #0f3460;border-radius:6px;padding:11px;white-space:pre-wrap}
+.notice-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:1px solid #0f3460;border-radius:5px;margin-bottom:6px;cursor:pointer;color:#c8d0d8;font-size:13px;background:#0d1b2a;transition:all .12s}
+.notice-item input[type=checkbox]{margin-top:2px;flex-shrink:0}
+.notice-item.on{background:#0d2417;border-color:#2ea043;color:#c8f0d8}
+.notice-extra{margin:2px 0 10px 30px}
+.notice-extra input:disabled,.notice-extra select:disabled{opacity:.4;cursor:not-allowed}
 </style>
 </head>
 <body>
 <div class="hdr">
   <div style="flex:1">
-    <h1>PAL Roadside Schedule Composer V2.2</h1>
+    <h1>PAL Roadside Schedule Composer V2.3</h1>
     <p>Pop-A-Lock of Northern NJ &mdash; tech names validated against the canonical Google Sheet</p>
   </div>
   <div style="font-size:11px;color:#7a8a9a;text-align:right" id="rosterBanner">Roster: not loaded &mdash; strict mode OFF</div>
@@ -83,6 +89,8 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 <div class="tabs">
   <button class="tab-btn active" onclick="switchTab('schedule',this)">Schedule</button>
   <button class="tab-btn" onclick="switchTab('avail',this)">Availability Update</button>
+  <button class="tab-btn" onclick="switchTab('mgmt',this)">Management Notice</button>
+  <button class="tab-btn" onclick="switchTab('bonus',this)">Bonus Impact</button>
   <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
   <button class="tab-btn" id="outboxTabBtn" onclick="switchTab('outbox',this)" style="display:none;color:#e8a020">Outbox (0)</button>
 </div>
@@ -286,6 +294,101 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 
 </div><!-- /wrap -->
 </div><!-- /availTab -->
+
+<!-- ─────────── Management Notice tab ─────────── -->
+<div id="mgmtTab" style="display:none">
+<div class="wrap">
+<div class="form">
+
+  <div class="card">
+    <div class="ct">Management Notice</div>
+    <div class="row"><span class="lbl">Tech</span><select id="mgmtTech" onchange="updMgmt()"><option value="">&mdash; select tech &mdash;</option></select></div>
+    <div class="row"><span class="lbl">Tech email</span><input type="text" id="mgmtEmail" placeholder="tech@example.com" oninput="updMgmt()"></div>
+    <div class="row"><span class="lbl">Manager email</span><input type="text" id="mgmtMgrEmail" oninput="updMgmt()"></div>
+    <div class="hint" style="margin-top:2px">Sent from the AutoNav account directly to the tech, copying the manager.</div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Boilerplate &mdash; always included</div>
+    <div class="notice-bp" id="mgmtBoiler"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Issues to include &mdash; highlighted items are sent</div>
+    <div class="hint" style="margin-bottom:9px">Check each issue that applies. Only the highlighted issues appear in the email.</div>
+    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to be logged into Pulsar app with location active" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to be logged into Pulsar app with location active</span></label>
+    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to respond at the start of your shift, as indicated in the schedule" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to respond at the start of your shift, as indicated in the schedule</span></label>
+    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Not answering your phone when called" onchange="toggleNoticeItem(this);updMgmt()"><span>Not answering your phone when called</span></label>
+  </div>
+
+</div><!-- /form -->
+
+<div class="right">
+  <div class="card" style="position:sticky;top:14px">
+    <div class="pv-hdr">Email Preview</div>
+    <div class="pv-meta">To: <b id="mgmtPvTo"></b></div>
+    <div class="pv-meta">Subject: <b id="mgmtPvSub"></b></div>
+    <div id="mgmtPvBody" class="pvbody"></div>
+    <button class="sendbtn" onclick="openMgmtGmail()">&#9993; Open in Gmail</button>
+    <button class="cpybtn" id="mgmtCpyBtn" onclick="copyMgmtBody()">Copy email body</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+</div><!-- /mgmtTab -->
+
+<!-- ─────────── Bonus Impact tab ─────────── -->
+<div id="bonusTab" style="display:none">
+<div class="wrap">
+<div class="form">
+
+  <div class="card">
+    <div class="ct">Bonus Impact</div>
+    <div class="row"><span class="lbl">Tech</span><select id="bonusTech" onchange="updBonus()"><option value="">&mdash; select tech &mdash;</option></select></div>
+    <div class="row"><span class="lbl">Tech email</span><input type="text" id="bonusEmail" placeholder="tech@example.com" oninput="updBonus()"></div>
+    <div class="row"><span class="lbl">Manager email</span><input type="text" id="bonusMgrEmail" oninput="updBonus()"></div>
+    <div class="row"><span class="lbl">Bonus impact</span><select id="bonusPct" onchange="updBonus()" style="max-width:110px"><option value="">&mdash; % &mdash;</option></select></div>
+    <div class="hint" style="margin-top:2px">Sent from the AutoNav account directly to the tech, copying the manager.</div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Boilerplate &mdash; always included</div>
+    <div class="notice-bp" id="bonusBoiler"></div>
+  </div>
+
+  <div class="card">
+    <div class="ct">Performance problems to include &mdash; highlighted items are sent</div>
+    <div class="hint" style="margin-bottom:9px">Check each problem that applies. Only the highlighted problems appear in the email.</div>
+
+    <label class="notice-item"><input type="checkbox" id="bMissedShift" onchange="toggleNoticeItem(this);toggleBonusExtras();updBonus()"><span>A missed shift</span></label>
+    <div class="notice-extra row"><span class="lbl" style="min-width:64px">Shift</span><select id="bMissedShiftTime" onchange="updBonus()" disabled style="max-width:160px"><option value="">&mdash; select shift &mdash;</option></select></div>
+
+    <label class="notice-item"><input type="checkbox" id="bMissedCall" onchange="toggleNoticeItem(this);toggleBonusExtras();updBonus()"><span>A missed call</span></label>
+    <div class="notice-extra row"><input type="text" id="bMissedCallTime" placeholder="time (e.g. 10:30 or 18:00)" oninput="updBonus()" disabled style="max-width:200px"><input type="text" id="bMissedCallCity" placeholder="city" oninput="updBonus()" disabled style="max-width:150px"></div>
+
+    <label class="notice-item"><input type="checkbox" id="bRefusal" value="A refusal to accept a call" onchange="toggleNoticeItem(this);updBonus()"><span>A refusal to accept a call</span></label>
+    <label class="notice-item"><input type="checkbox" id="bUnavailSvc" value="Being unavailable for services during your on-call shift" onchange="toggleNoticeItem(this);updBonus()"><span>Being unavailable for services during your on-call shift</span></label>
+    <label class="notice-item"><input type="checkbox" id="bInaccurate" value="Providing inaccurate status" onchange="toggleNoticeItem(this);updBonus()"><span>Providing inaccurate status</span></label>
+
+    <label class="notice-item"><input type="checkbox" id="bUnavailMin" onchange="toggleNoticeItem(this);toggleBonusExtras();updBonus()"><span>Being unavailable for more than <b id="bUnavailXlabel">X</b> minutes</span></label>
+    <div class="notice-extra row"><span class="lbl" style="min-width:64px">Minutes</span><input type="text" id="bUnavailMinVal" placeholder="e.g. 30" oninput="updBonus()" disabled style="max-width:90px"></div>
+  </div>
+
+</div><!-- /form -->
+
+<div class="right">
+  <div class="card" style="position:sticky;top:14px">
+    <div class="pv-hdr">Email Preview</div>
+    <div class="pv-meta">To: <b id="bonusPvTo"></b></div>
+    <div class="pv-meta">Subject: <b id="bonusPvSub"></b></div>
+    <div id="bonusPvBody" class="pvbody"></div>
+    <button class="sendbtn" onclick="openBonusGmail()">&#9993; Open in Gmail</button>
+    <button class="cpybtn" id="bonusCpyBtn" onclick="copyBonusBody()">Copy email body</button>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+</div><!-- /bonusTab -->
 
 <!-- ─────────── Settings tab ─────────── -->
 <div id="settingsTab" style="display:none">
@@ -729,9 +832,13 @@ function switchTab(tab, btn) {
   btn.classList.add('active');
   document.getElementById('scheduleTab').style.display = tab === 'schedule' ? '' : 'none';
   document.getElementById('availTab').style.display    = tab === 'avail'    ? '' : 'none';
+  document.getElementById('mgmtTab').style.display      = tab === 'mgmt'     ? '' : 'none';
+  document.getElementById('bonusTab').style.display     = tab === 'bonus'    ? '' : 'none';
   document.getElementById('settingsTab').style.display = tab === 'settings' ? '' : 'none';
   document.getElementById('outboxTab').style.display   = tab === 'outbox'   ? '' : 'none';
   if (tab === 'avail')    updAvail();
+  if (tab === 'mgmt')     updMgmt();
+  if (tab === 'bonus')    updBonus();
   if (tab === 'settings') renderSettings();
   if (tab === 'outbox')   renderOutbox();
   window.scrollTo(0, 0);
@@ -938,6 +1045,230 @@ function copyAvailBody() {
   });
 }
 
+// ── Management Notice / Bonus Impact tabs ────────────────────────────────────
+// Two disciplinary-notice composers.  Each is sent from the AutoNav account
+// directly to the tech, copying the manager.  Wording below is verbatim from
+// the specification — do not paraphrase the boilerplate.
+const NOTICE_MANAGER = 'jason.oppenberg@popalocknj.com';
+
+const MGMT_BOILER =
+  'This notification is being sent to you and your manager. We wanted to let you '
+  + 'know that your performance has not met the minimum standards of the job, as '
+  + 'identified during your hiring process. Your bonus opportunity may be impacted '
+  + 'if you do not correct these issues.';
+
+function bonusBoilerText(pct) {
+  return 'This notification is being sent to you and your manager. Your performance '
+    + 'has not met the minimum requirements of the job as described during your '
+    + 'training. Your bonus opportunity will be impacted by ' + pct + '.';
+}
+
+const BONUS_CLOSING =
+  'Failure to correct the performance problems identified here will result in '
+  + 'further bonus impacts and could result in full loss of your bonus eligibility '
+  + 'for this period.';
+
+// All shift windows (Morning + Night) for the "missed shift" dropdown.
+const ALL_SHIFTS = [...SHIFT_TIMES.Morning, ...SHIFT_TIMES.Night];
+
+function firstNameOf(full) {
+  const s = (full || '').trim();
+  return s ? s.split(/\s+/)[0] : '';
+}
+
+// Highlight a checked notice item so the navigator can see at a glance which
+// lines will be sent ("only the highlighted ones are used").
+function toggleNoticeItem(cb) {
+  const item = cb.closest('.notice-item');
+  if (item) item.classList.toggle('on', cb.checked);
+}
+
+// Populate the tech <select> on each notice tab from the loaded roster.
+function syncNoticeTechSelects() {
+  for (const id of ['mgmtTech', 'bonusTech']) {
+    const sel = document.getElementById(id);
+    if (!sel) continue;
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— select tech —</option>';
+    const seen = new Set();
+    for (const t of roster) {
+      const key = t.name.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const o = document.createElement('option');
+      o.value = t.name; o.textContent = t.name;
+      sel.appendChild(o);
+    }
+    if (cur) sel.value = cur;
+  }
+}
+
+// ── Management Notice ─────────────────────────────────────────────────────────
+function mgmtRecipients() {
+  return [v('mgmtEmail'), v('mgmtMgrEmail')].filter(Boolean);
+}
+
+function buildMgmtSubject() {
+  const nm = v('mgmtTech');
+  return `Management Notice - ${nm || '(tech)'}`;
+}
+
+function buildMgmtBody() {
+  const nm    = v('mgmtTech');
+  const first = firstNameOf(nm) || '(tech)';
+  const items = [...document.querySelectorAll('.mgmt-item:checked')].map(cb => cb.value);
+  const lines = [`Dear ${first},`, '', MGMT_BOILER];
+  if (items.length) {
+    lines.push('', 'The following items have been identified:', '');
+    items.forEach(i => lines.push(`   •  ${i}`));
+  }
+  lines.push('', 'Pop-A-Lock of Northern NJ');
+  return lines.join('\n');
+}
+
+function updMgmt() {
+  document.getElementById('mgmtBoiler').textContent = MGMT_BOILER;
+  document.getElementById('mgmtPvBody').textContent = buildMgmtBody();
+  document.getElementById('mgmtPvSub').textContent  = buildMgmtSubject();
+  const to = mgmtRecipients();
+  document.getElementById('mgmtPvTo').textContent   = to.length ? to.join(', ') : '(tech email)';
+}
+
+function openMgmtGmail() {
+  const problems = [];
+  if (!v('mgmtTech'))  problems.push('Select a tech.');
+  if (!v('mgmtEmail')) problems.push('Enter the tech’s email address.');
+  if (document.querySelectorAll('.mgmt-item:checked').length === 0)
+    problems.push('Check at least one issue to include.');
+  if (problems.length) {
+    alert('CANNOT SEND — Management Notice is incomplete:\n\n   •  '
+      + problems.join('\n   •  ') + '\n\nNothing has been sent.');
+    return;
+  }
+  sendOrQueue('Management Notice', buildMgmtSubject(), buildMgmtBody(), mgmtRecipients());
+}
+
+function copyMgmtBody() {
+  navigator.clipboard.writeText(buildMgmtBody()).then(() => {
+    const b = document.getElementById('mgmtCpyBtn');
+    b.textContent = 'Copied!';
+    setTimeout(() => b.textContent = 'Copy email body', 1800);
+  });
+}
+
+// ── Bonus Impact ──────────────────────────────────────────────────────────────
+function bonusRecipients() {
+  return [v('bonusEmail'), v('bonusMgrEmail')].filter(Boolean);
+}
+
+function buildBonusSubject() {
+  const nm = v('bonusTech');
+  return `Bonus Impact Notice - ${nm || '(tech)'}`;
+}
+
+// Enable/disable the grayed extra fields based on their parent checkbox.
+function toggleBonusExtras() {
+  document.getElementById('bMissedShiftTime').disabled = !document.getElementById('bMissedShift').checked;
+  const mc = document.getElementById('bMissedCall').checked;
+  document.getElementById('bMissedCallTime').disabled = !mc;
+  document.getElementById('bMissedCallCity').disabled = !mc;
+  document.getElementById('bUnavailMinVal').disabled  = !document.getElementById('bUnavailMin').checked;
+}
+
+// Assemble the problem bullets in the specified order.
+function bonusItems() {
+  const items = [];
+  if (document.getElementById('bMissedShift').checked) {
+    const s = v('bMissedShiftTime');
+    items.push('A missed shift' + (s ? ` (${s})` : ''));
+  }
+  if (document.getElementById('bMissedCall').checked) {
+    const t = v('bMissedCallTime'), c = v('bMissedCallCity');
+    let line = 'A missed call';
+    if (t) line += `, ${t}`;
+    if (c) line += `, ${c}`;
+    items.push(line);
+  }
+  if (document.getElementById('bRefusal').checked)    items.push('A refusal to accept a call');
+  if (document.getElementById('bUnavailSvc').checked) items.push('Being unavailable for services during your on-call shift');
+  if (document.getElementById('bInaccurate').checked) items.push('Providing inaccurate status');
+  if (document.getElementById('bUnavailMin').checked) {
+    const m = v('bUnavailMinVal');
+    items.push(`Being unavailable for more than ${m || 'X'} minutes`);
+  }
+  return items;
+}
+
+function buildBonusBody() {
+  const nm    = v('bonusTech');
+  const first = firstNameOf(nm) || '(tech)';
+  const pct   = v('bonusPct') ? `${v('bonusPct')}%` : '____%';
+  const items = bonusItems();
+  const lines = [`Dear ${first},`, '', bonusBoilerText(pct)];
+  if (items.length) {
+    lines.push('', 'The following performance problems have been identified:', '');
+    items.forEach(i => lines.push(`   •  ${i}`));
+  }
+  lines.push('', BONUS_CLOSING, '', 'Pop-A-Lock of Northern NJ');
+  return lines.join('\n');
+}
+
+function updBonus() {
+  const pct = v('bonusPct') ? `${v('bonusPct')}%` : '____%';
+  document.getElementById('bonusBoiler').textContent = bonusBoilerText(pct);
+  document.getElementById('bUnavailXlabel').textContent = v('bUnavailMinVal') || 'X';
+  document.getElementById('bonusPvBody').textContent = buildBonusBody();
+  document.getElementById('bonusPvSub').textContent  = buildBonusSubject();
+  const to = bonusRecipients();
+  document.getElementById('bonusPvTo').textContent   = to.length ? to.join(', ') : '(tech email)';
+}
+
+function openBonusGmail() {
+  const problems = [];
+  if (!v('bonusTech'))  problems.push('Select a tech.');
+  if (!v('bonusEmail')) problems.push('Enter the tech’s email address.');
+  if (!v('bonusPct'))   problems.push('Choose the bonus impact percentage.');
+  if (bonusItems().length === 0)
+    problems.push('Check at least one performance problem to include.');
+  if (document.getElementById('bUnavailMin').checked && !v('bUnavailMinVal'))
+    problems.push('Enter the number of minutes for "unavailable for more than X minutes".');
+  if (problems.length) {
+    alert('CANNOT SEND — Bonus Impact notice is incomplete:\n\n   •  '
+      + problems.join('\n   •  ') + '\n\nNothing has been sent.');
+    return;
+  }
+  sendOrQueue('Bonus Impact', buildBonusSubject(), buildBonusBody(), bonusRecipients());
+}
+
+function copyBonusBody() {
+  navigator.clipboard.writeText(buildBonusBody()).then(() => {
+    const b = document.getElementById('bonusCpyBtn');
+    b.textContent = 'Copied!';
+    setTimeout(() => b.textContent = 'Copy email body', 1800);
+  });
+}
+
+// One-time population of the static notice dropdowns + boilerplate + defaults.
+function initNoticeTabs() {
+  const shiftSel = document.getElementById('bMissedShiftTime');
+  for (const s of ALL_SHIFTS) {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    shiftSel.appendChild(o);
+  }
+  const pctSel = document.getElementById('bonusPct');
+  for (let p = 10; p <= 100; p += 10) {
+    const o = document.createElement('option');
+    o.value = String(p); o.textContent = `${p}%`;
+    pctSel.appendChild(o);
+  }
+  document.getElementById('mgmtMgrEmail').value  = NOTICE_MANAGER;
+  document.getElementById('bonusMgrEmail').value = NOTICE_MANAGER;
+  syncNoticeTechSelects();
+  updMgmt();
+  updBonus();
+}
+
 // ── Roster sheet integration ─────────────────────────────────────────────────
 // V2: direct fetch of the published-CSV URL.  Google publishes Sheets with
 // Access-Control-Allow-Origin: *, so CORS works from any HTTPS origin.  No
@@ -1097,6 +1428,7 @@ function syncDatalist() {
       }
     }
   }
+  syncNoticeTechSelects();
 }
 
 function updateRosterBanner() {
@@ -1418,6 +1750,7 @@ if ('serviceWorker' in navigator) {
 
   updateTP();  // set placeholders to match detected shift type
   upd();
+  initNoticeTabs();  // populate notice dropdowns + boilerplate + defaults
 
   // Roster sheet — load URLs from localStorage
   loadSheetState();
