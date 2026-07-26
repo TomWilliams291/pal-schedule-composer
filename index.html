@@ -453,7 +453,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 
 <script>
 history.scrollRestoration = 'manual';
-const FIXED = ['palautonav@gmail.com','jason.oppenberg@popalocknj.com','Philip.Allan@PopALockNJ.com','help@houston-dispatch.com'];
+const FIXED = ['palautonav@gmail.com','palnnjpay@gmail.com','jason.oppenberg@popalocknj.com','Philip.Allan@PopALockNJ.com','help@houston-dispatch.com'];
 const DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 let rowCtr  = 0;
 let tlCtr   = 0, ncnsCtr = 0;
@@ -1060,6 +1060,12 @@ const NOTICE_MANAGER = 'jason.oppenberg@popalocknj.com';
 const NOTICE_MAILER_URL   = 'https://script.google.com/macros/s/AKfycbyPTLE2-JCHqg5R76NWT_LdiSuV3FORXjcwKR5BZZl_GTiEa3VrR10L7ZhUmF19-QJX/exec';
 const NOTICE_MAILER_TOKEN = 'pnp_9f3kQ2xL7vBt4mZs';  // light shared gate; matches Code.gs
 
+// palnnjpay is the SENDER of these notices, but it must also RECEIVE a copy so a
+// record lands in its inbox (matching the schedule/availability emails, which
+// always list palnnjpay as a recipient).  Added to Cc on every notice send; the
+// mailer de-duplicates case-insensitively, so it never double-lists.
+const NOTICE_RECORD_COPY = 'palnnjpay@gmail.com';
+
 // Disable a button and show a transient label while an async send is in flight;
 // returns a function that restores the original text/enabled state.
 function setBtnBusy(btn, label) {
@@ -1081,7 +1087,7 @@ async function sendNotice(kind, toAddr, ccAddr, subject, body, btn) {
     return false;
   }
   const to = [toAddr].filter(Boolean);
-  const cc = [ccAddr].filter(Boolean);
+  const cc = [ccAddr, NOTICE_RECORD_COPY].filter(Boolean);
   const restore = setBtnBusy(btn, '… Sending');
   try {
     const res = await fetch(NOTICE_MAILER_URL, {
