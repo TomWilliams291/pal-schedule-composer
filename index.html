@@ -305,7 +305,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="row"><span class="lbl">Tech</span><select id="mgmtTech" onchange="onMgmtTechChange();updMgmt()"><option value="">&mdash; select tech &mdash;</option></select></div>
     <div class="row"><span class="lbl">Tech email</span><input type="text" id="mgmtEmail" placeholder="tech@example.com" oninput="updMgmt()"></div>
     <div class="row"><span class="lbl">Manager email</span><input type="text" id="mgmtMgrEmail" oninput="updMgmt()"></div>
-    <div class="hint" style="margin-top:2px">Sent from the AutoNav account directly to the tech, copying the manager.</div>
+    <div class="hint" style="margin-top:2px">Sent from the PAL&nbsp;NNJ&nbsp;Pay account directly to the tech, copying the manager.</div>
   </div>
 
   <div class="card">
@@ -319,6 +319,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to be logged into Pulsar app with location active" data-short="not logged into Pulsar" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to be logged into Pulsar app with location active</span></label>
     <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to respond at the start of your shift, as indicated in the schedule" data-short="no shift-start response" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to respond at the start of your shift, as indicated in the schedule</span></label>
     <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Not answering your phone when called" data-short="no phone answer" onchange="toggleNoticeItem(this);updMgmt()"><span>Not answering your phone when called</span></label>
+    <label class="notice-item"><input type="checkbox" class="mgmt-item" value="Failure to answer SMS or phone calls and accept a call" data-short="no SMS/phone answer, no accept" onchange="toggleNoticeItem(this);updMgmt()"><span>Failure to answer SMS or phone calls and accept a call</span></label>
   </div>
 
 </div><!-- /form -->
@@ -348,7 +349,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="row"><span class="lbl">Tech email</span><input type="text" id="bonusEmail" placeholder="tech@example.com" oninput="updBonus()"></div>
     <div class="row"><span class="lbl">Manager email</span><input type="text" id="bonusMgrEmail" oninput="updBonus()"></div>
     <div class="row"><span class="lbl">Bonus impact</span><select id="bonusPct" onchange="updBonus()" style="max-width:110px"><option value="">&mdash; % &mdash;</option></select></div>
-    <div class="hint" style="margin-top:2px">Sent from the AutoNav account directly to the tech, copying the manager.</div>
+    <div class="hint" style="margin-top:2px">Sent from the PAL&nbsp;NNJ&nbsp;Pay account directly to the tech, copying the manager.</div>
   </div>
 
   <div class="card">
