@@ -148,6 +148,22 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <button class="addrow" onclick="addRow()">+ Add tech</button>
   </div>
 
+  <!-- LOCKSMITHS -->
+  <div class="card">
+    <div class="ct">Locksmiths</div>
+    <div class="row">
+      <span class="lbl">Commercial</span>
+      <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-right:10px"><input type="checkbox" id="lkCommOn" onchange="upd()"> on duty</label>
+      <input type="text" id="lkCommTime" placeholder="9am-6pm" oninput="upd()" style="max-width:130px">
+    </div>
+    <div class="row">
+      <span class="lbl">Automotive</span>
+      <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-right:10px"><input type="checkbox" id="lkAutoOn" onchange="upd()"> on duty</label>
+      <input type="text" id="lkAutoTime" placeholder="9am-6pm" oninput="upd()" style="max-width:130px">
+    </div>
+    <div class="hint" style="margin-top:8px;color:#7a8a9a">Listed by role only &mdash; no personal name. AutoNav resolves the role to the actual locksmith &amp; phone from the tech roster.</div>
+  </div>
+
 
   </div><!-- /mainForm -->
 
@@ -689,6 +705,21 @@ function buildBody(opts) {
   }
   const batteryTechs = techs.filter(t => t.role === 'Battery Tech');
   if (batteryTechs.length) secs.push(`Battery Technicians:\n\n${techLines(batteryTechs)}`);
+
+  // Locksmiths — listed by ROLE only (no personal name).  AutoNav resolves the
+  // role to the actual locksmith + wake-up phone from techs.json by subtype, so
+  // the schedule stays decoupled from who the locksmith is.  Each line is
+  // "Commercial Locksmith (time)" / "Automotive Locksmith (time)", parsed by the
+  // Monitor's roster loader (roster.py locksmith section + subtype detection).
+  const lkLines = [];
+  const lkAdd = (on, label, timeId) => {
+    if (!on) return;
+    const t = v(timeId);
+    lkLines.push(t ? `${label} (${t})` : label);
+  };
+  lkAdd(document.getElementById('lkCommOn')?.checked, 'Commercial Locksmith', 'lkCommTime');
+  lkAdd(document.getElementById('lkAutoOn')?.checked, 'Automotive Locksmith', 'lkAutoTime');
+  if (lkLines.length) secs.push(`Locksmiths:\n\n${lkLines.join('\n')}`);
 
   // Sign-off
   const soLines = ['Stay safe and have a great shift.', '', sName, title, 'Pop-A-Lock of Northern NJ'];
