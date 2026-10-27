@@ -224,6 +224,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
       <span class="lbl">Role</span>
       <div class="rg">
         <label><input type="radio" name="avRole" value="rs" onchange="updAvail()"> RS Tech</label>
+        <label><input type="radio" name="avRole" value="jss" onchange="updAvail()"> Jump Start Specialist</label>
         <label><input type="radio" name="avRole" value="battery_tech" onchange="updAvail()"> Battery Tech</label>
         <label><input type="radio" name="avRole" value="battery_installer" onchange="updAvail()"> Battery Installer</label>
         <label><input type="radio" name="avRole" value="locksmith" onchange="updAvail()"> Locksmith</label>
@@ -272,6 +273,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
         <span class="lbl">Role</span>
         <div class="rg">
           <label><input type="radio" name="addRole" value="rs" checked onchange="addRoleChange();updAvail()"> RS Tech</label>
+          <label><input type="radio" name="addRole" value="jss" onchange="addRoleChange();updAvail()"> Jump Start Specialist</label>
           <label><input type="radio" name="addRole" value="battery_tech" onchange="addRoleChange();updAvail()"> Battery Tech</label>
           <label><input type="radio" name="addRole" value="battery_installer" onchange="addRoleChange();updAvail()"> Battery Installer</label>
         </div>
@@ -476,7 +478,7 @@ let rowCtr  = 0;
 let tlCtr   = 0, ncnsCtr = 0;
 
 // ── Tech rows ────────────────────────────────────────────────────────────────
-const ROLE_OPTS = ['Road Service Tech', 'Battery Tech', 'Battery Installer'];
+const ROLE_OPTS = ['Road Service Tech', 'Jump Start Specialist', 'Battery Tech', 'Battery Installer'];
 const LOCATION_OPTS = ['North', 'Central', 'South', 'North/Central', 'South/Central', 'All'];
 
 // Battery Tech is the only zoneless role — its Location field is disabled and
@@ -697,7 +699,9 @@ function buildBody(opts) {
     return t.time ? `${nm} (${t.time})` : nm;
   }).join('\n');
   const covers = (t, zone) => (ZONE_EXPAND[t.loc] || []).includes(zone);
-  const ZONED_ROLES = ['Road Service Tech', 'Battery Installer'];
+  // Jump Start Specialists list under their zone like RS techs; the Monitor
+  // takes their jss role from techs.json (Tech Composer).
+  const ZONED_ROLES = ['Road Service Tech', 'Jump Start Specialist', 'Battery Installer'];
 
   for (const zone of SINGLE_ZONES) {
     const group = techs.filter(t => ZONED_ROLES.includes(t.role) && covers(t, zone));
