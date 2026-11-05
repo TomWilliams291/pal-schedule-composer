@@ -366,7 +366,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="row"><span class="lbl">Tech</span><select id="bonusTech" onchange="onBonusTechChange();updBonus()"><option value="">&mdash; select tech &mdash;</option></select></div>
     <div class="row"><span class="lbl">Tech email</span><input type="text" id="bonusEmail" placeholder="tech@example.com" oninput="updBonus()"></div>
     <div class="row"><span class="lbl">Manager email</span><input type="text" id="bonusMgrEmail" oninput="updBonus()"></div>
-    <div class="row"><span class="lbl">Bonus impact</span><select id="bonusPct" onchange="updBonus()" style="max-width:110px"><option value="">&mdash; % &mdash;</option></select></div>
+    <div class="row"><span class="lbl">Bonus impact</span><select id="bonusUnit" onchange="onBonusUnitChange();updBonus()" style="max-width:70px"><option value="pct">%</option><option value="dol">$</option></select><select id="bonusAmt" onchange="updBonus()" style="max-width:110px;margin-left:6px"><option value="">&mdash; amount &mdash;</option></select></div>
     <div class="hint" style="margin-top:2px">Sent from the PAL&nbsp;NNJ&nbsp;Pay account directly to the tech, copying the manager.</div>
   </div>
 
@@ -1164,9 +1164,38 @@ const MGMT_BOILER_DISPLAY = MGMT_INTRO + '\n\n' + MGMT_CLOSING;
 // Bonus Impact reuses the Performance Notice intro (MGMT_INTRO); only the
 // closing differs — a line naming the percentage reduction, then the
 // further-reductions warning as its own last line.
-function bonusImpactLine(pct) {
-  return `Your bonus opportunity will be impacted by ${pct}.`;
+function bonusImpactLine(amt) {
+  return `Your bonus opportunity will be impacted by ${amt}.`;
 }
+
+// Format the currently-selected impact amount for display.  Uses the unit
+// toggle (% or $) and the chosen amount; falls back to a placeholder so the
+// boilerplate still reads sensibly before an amount is picked.
+function bonusAmtText() {
+  const amt = v('bonusAmt');
+  if (!amt) return v('bonusUnit') === 'dol' ? '$____' : '____%';
+  return v('bonusUnit') === 'dol' ? `$${amt}` : `${amt}%`;
+}
+
+// Repopulate the amount dropdown when the unit toggle changes.  Percentages
+// are the original 5, 10, 20 … 100 ladder; dollar amounts are a short list
+// anchored at $50 (the only value currently in use — add more here if the
+// business adopts additional flat amounts).
+const BONUS_PCTS = [5, ...Array.from({length: 10}, (_, i) => (i + 1) * 10)];
+const BONUS_DOLS = [50];
+function populateBonusAmt() {
+  const sel  = document.getElementById('bonusAmt');
+  const unit = v('bonusUnit');
+  sel.innerHTML = '<option value="">— amount —</option>';
+  const vals = unit === 'dol' ? BONUS_DOLS : BONUS_PCTS;
+  for (const n of vals) {
+    const o = document.createElement('option');
+    o.value = String(n);
+    o.textContent = unit === 'dol' ? `$${n}` : `${n}%`;
+    sel.appendChild(o);
+  }
+}
+function onBonusUnitChange() { populateBonusAmt(); }
 const BONUS_FAILURE_LINE =
   'Failure to correct these deficiencies may result in further bonus reductions.';
 
@@ -1362,20 +1391,20 @@ function bonusItems() {
 function buildBonusBody() {
   const nm    = v('bonusTech');
   const first = firstNameOf(nm) || '(tech)';
-  const pct   = v('bonusPct') ? `${v('bonusPct')}%` : '____%';
+  const amt   = bonusAmtText();
   const items = bonusItems();
   const lines = [`Dear ${first},`, '', MGMT_INTRO];
   if (items.length) {
     lines.push('', 'The following items have been identified:', '');
     items.forEach(i => lines.push(`   •  ${i}`));
   }
-  lines.push('', bonusImpactLine(pct), '', BONUS_FAILURE_LINE, '', 'Pop-A-Lock of Northern NJ');
+  lines.push('', bonusImpactLine(amt), '', BONUS_FAILURE_LINE, '', 'Pop-A-Lock of Northern NJ');
   return lines.join('\n');
 }
 
 function updBonus() {
-  const pct = v('bonusPct') ? `${v('bonusPct')}%` : '____%';
-  document.getElementById('bonusBoiler').textContent = MGMT_INTRO + '\n\n' + bonusImpactLine(pct) + '\n\n' + BONUS_FAILURE_LINE;
+  const amt = bonusAmtText();
+  document.getElementById('bonusBoiler').textContent = MGMT_INTRO + '\n\n' + bonusImpactLine(amt) + '\n\n' + BONUS_FAILURE_LINE;
   document.getElementById('bUnavailXlabel').textContent = v('bUnavailMinVal') || 'X';
   document.getElementById('bonusPvBody').textContent = buildBonusBody();
   document.getElementById('bonusPvSub').textContent  = buildBonusSubject();
@@ -1387,7 +1416,7 @@ async function openBonusGmail(btn) {
   const problems = [];
   if (!v('bonusTech'))  problems.push('Select a tech.');
   if (!v('bonusEmail')) problems.push('Enter the tech’s email address.');
-  if (!v('bonusPct'))   problems.push('Choose the bonus impact percentage.');
+  if (!v('bonusAmt'))   problems.push('Choose the bonus impact amount.');
   if (bonusItems().length === 0)
     problems.push('Check at least one performance problem to include.');
   if (document.getElementById('bUnavailMin').checked && !v('bUnavailMinVal'))
@@ -1409,7 +1438,9 @@ function resetBonusForm() {
   document.getElementById('bonusTech').value = '';
   document.getElementById('bonusEmail').value = '';
   document.getElementById('bonusMgrEmail').value = NOTICE_MANAGER;
-  document.getElementById('bonusPct').value = '';
+  document.getElementById('bonusUnit').value = 'pct';
+  populateBonusAmt();
+  document.getElementById('bonusAmt').value = '';
   document.querySelectorAll('#bonusTab input[type=checkbox]').forEach(cb => {
     cb.checked = false; toggleNoticeItem(cb);
   });
@@ -1437,13 +1468,7 @@ function initNoticeTabs() {
     o.value = s; o.textContent = s;
     shiftSel.appendChild(o);
   }
-  const pctSel = document.getElementById('bonusPct');
-  const pcts = [5, ...Array.from({length: 10}, (_, i) => (i + 1) * 10)];  // 5, 10, 20 … 100
-  for (const p of pcts) {
-    const o = document.createElement('option');
-    o.value = String(p); o.textContent = `${p}%`;
-    pctSel.appendChild(o);
-  }
+  populateBonusAmt();
   document.getElementById('mgmtMgrEmail').value  = NOTICE_MANAGER;
   document.getElementById('bonusMgrEmail').value = NOTICE_MANAGER;
   syncNoticeTechSelects();
