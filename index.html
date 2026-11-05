@@ -366,7 +366,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="row"><span class="lbl">Tech</span><select id="bonusTech" onchange="onBonusTechChange();updBonus()"><option value="">&mdash; select tech &mdash;</option></select></div>
     <div class="row"><span class="lbl">Tech email</span><input type="text" id="bonusEmail" placeholder="tech@example.com" oninput="updBonus()"></div>
     <div class="row"><span class="lbl">Manager email</span><input type="text" id="bonusMgrEmail" oninput="updBonus()"></div>
-    <div class="row"><span class="lbl">Bonus impact</span><select id="bonusUnit" onchange="onBonusUnitChange();updBonus()" style="max-width:70px"><option value="pct">%</option><option value="dol">$</option></select><select id="bonusAmt" onchange="updBonus()" style="max-width:110px;margin-left:6px"><option value="">&mdash; amount &mdash;</option></select></div>
+    <div class="row"><span class="lbl">Bonus impact</span><select id="bonusAmt" onchange="updBonus()" style="max-width:140px"><option value="">&mdash; amount &mdash;</option></select></div>
     <div class="hint" style="margin-top:2px">Sent from the PAL&nbsp;NNJ&nbsp;Pay account directly to the tech, copying the manager.</div>
   </div>
 
@@ -1168,34 +1168,27 @@ function bonusImpactLine(amt) {
   return `Your bonus opportunity will be impacted by ${amt}.`;
 }
 
-// Format the currently-selected impact amount for display.  Uses the unit
-// toggle (% or $) and the chosen amount; falls back to a placeholder so the
-// boilerplate still reads sensibly before an amount is picked.
-function bonusAmtText() {
-  const amt = v('bonusAmt');
-  if (!amt) return v('bonusUnit') === 'dol' ? '$____' : '____%';
-  return v('bonusUnit') === 'dol' ? `$${amt}` : `${amt}%`;
-}
+// The amount dropdown stores the fully-formatted label as its value ("5%",
+// "$50", …), so the preview can drop it straight into the sentence.  Falls
+// back to a blank-line placeholder before anything is picked.
+function bonusAmtText() { return v('bonusAmt') || '____'; }
 
-// Repopulate the amount dropdown when the unit toggle changes.  Percentages
-// are the original 5, 10, 20 … 100 ladder; dollar amounts are a short list
-// anchored at $50 (the only value currently in use — add more here if the
-// business adopts additional flat amounts).
-const BONUS_PCTS = [5, ...Array.from({length: 10}, (_, i) => (i + 1) * 10)];
-const BONUS_DOLS = [50];
+// Single flat list of every bonus-impact choice.  Percentages first, then
+// any flat-dollar amounts — add more entries here if the business adopts
+// additional values.
+const BONUS_AMOUNTS = [
+  '5%', '10%', '20%', '30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%',
+  '$50',
+];
 function populateBonusAmt() {
-  const sel  = document.getElementById('bonusAmt');
-  const unit = v('bonusUnit');
+  const sel = document.getElementById('bonusAmt');
   sel.innerHTML = '<option value="">— amount —</option>';
-  const vals = unit === 'dol' ? BONUS_DOLS : BONUS_PCTS;
-  for (const n of vals) {
+  for (const label of BONUS_AMOUNTS) {
     const o = document.createElement('option');
-    o.value = String(n);
-    o.textContent = unit === 'dol' ? `$${n}` : `${n}%`;
+    o.value = label; o.textContent = label;
     sel.appendChild(o);
   }
 }
-function onBonusUnitChange() { populateBonusAmt(); }
 const BONUS_FAILURE_LINE =
   'Failure to correct these deficiencies may result in further bonus reductions.';
 
@@ -1438,8 +1431,6 @@ function resetBonusForm() {
   document.getElementById('bonusTech').value = '';
   document.getElementById('bonusEmail').value = '';
   document.getElementById('bonusMgrEmail').value = NOTICE_MANAGER;
-  document.getElementById('bonusUnit').value = 'pct';
-  populateBonusAmt();
   document.getElementById('bonusAmt').value = '';
   document.querySelectorAll('#bonusTab input[type=checkbox]').forEach(cb => {
     cb.checked = false; toggleNoticeItem(cb);
