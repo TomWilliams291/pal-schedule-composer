@@ -10,30 +10,30 @@
 <meta name="theme-color" content="#c1121f">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Tahoma,sans-serif;background:#1a1a2e;color:#e0e0e0;min-height:100vh}
-.hdr{background:#16213e;padding:14px 24px;border-bottom:2px solid #c1121f;display:flex;align-items:center;gap:16px}
-.hdr h1{font-size:17px;font-weight:700;color:#fff}
-.hdr p{font-size:11px;color:#888;margin-top:2px}
+body{font-family:'Segoe UI',Tahoma,sans-serif;background:#ffffff;color:#111827;min-height:100vh}
+.hdr{background:#f5f6f8;padding:14px 24px;border-bottom:2px solid #c1121f;display:flex;align-items:center;gap:16px}
+.hdr h1{font-size:17px;font-weight:700;color:#111827}
+.hdr p{font-size:12.5px;color:#566070;margin-top:2px}
 .wrap{display:flex;gap:14px;padding:14px;max-width:1280px;margin:0 auto}
 .form{flex:1;min-width:0}
 .right{width:410px;flex-shrink:0}
 @media(max-width:900px){.wrap{flex-direction:column}.right{width:100%}}
-.card{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:14px;margin-bottom:10px}
-.ct{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#c1121f;margin-bottom:11px;display:flex;align-items:center;gap:8px}
-.ct .tog{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:11px;color:#888;text-transform:none;font-weight:400;letter-spacing:0;cursor:pointer}
+.card{background:#f5f6f8;border:1px solid #b6bdc9;border-radius:8px;padding:14px;margin-bottom:10px}
+.ct{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#c1121f;margin-bottom:11px;display:flex;align-items:center;gap:8px}
+.ct .tog{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:12.5px;color:#566070;text-transform:none;font-weight:400;letter-spacing:0;cursor:pointer}
 .row{display:flex;gap:8px;margin-bottom:7px;align-items:center}
-.lbl{font-size:11.5px;color:#999;white-space:nowrap;min-width:88px}
-input[type=text],select{background:#0d1b2a;border:1px solid #0f3460;border-radius:4px;color:#e0e0e0;padding:6px 9px;font-size:13px;font-family:inherit;width:100%;transition:border-color .15s}
+.lbl{font-size:13px;color:#566070;white-space:nowrap;min-width:88px}
+input[type=text],select{background:#ffffff;border:1px solid #b6bdc9;border-radius:4px;color:#111827;padding:6px 9px;font-size:14.5px;font-family:inherit;width:100%;transition:border-color .15s}
 input[type=text]:focus,select:focus{outline:none;border-color:#c1121f}
-input[type=text]:disabled{opacity:.4;cursor:not-allowed;color:#5a6a7a}
+input[type=text]:disabled{opacity:.4;cursor:not-allowed;color:#566070}
 select:disabled{opacity:.4;cursor:not-allowed}
-input::placeholder{color:#3a4a5a}
+input::placeholder{color:#7b8494}
 .rg{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.rg label{min-width:0;display:flex;align-items:center;gap:5px;cursor:pointer;color:#ccc;font-size:12px}
+.rg label{min-width:0;display:flex;align-items:center;gap:5px;cursor:pointer;color:#111827;font-size:13.5px}
 .rg input[type=radio]{width:auto;accent-color:#c1121f}
 input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
-.rg-sep{width:1px;background:#2a3a5a;align-self:stretch;margin:0 4px;flex-shrink:0}
-.mode-lbl{color:#e8a020!important}
+.rg-sep{width:1px;background:#cfd4dc;align-self:stretch;margin:0 4px;flex-shrink:0}
+.mode-lbl{color:#9a5b00!important}
 .mode-lbl input[type=checkbox]{accent-color:#e8a020!important}
 .tr{display:flex;gap:6px;margin-bottom:5px;align-items:center;flex-wrap:wrap}
 .tr input:nth-child(1){flex:2;min-width:130px}
@@ -41,41 +41,47 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 .tr .time-select{flex:1;min-width:96px;width:auto}
 .tr .role-select{flex:1.4;min-width:124px;width:auto}
 .tr .loc-select{flex:1.2;min-width:108px;width:auto}
-.rm{background:none;border:none;color:#3a5a7a;cursor:pointer;font-size:16px;padding:2px 5px;line-height:1;border-radius:3px;flex-shrink:0}
+.rm{background:none;border:none;color:#566070;cursor:pointer;font-size:16px;padding:2px 5px;line-height:1;border-radius:3px;flex-shrink:0}
 .rm:hover{color:#c1121f}
-.addrow{background:none;border:1px dashed #1a3050;color:#4a6a8a;cursor:pointer;font-size:12px;padding:5px 10px;border-radius:4px;width:100%;text-align:left;margin-top:2px;font-family:inherit}
+.addrow{background:none;border:1px dashed #b6bdc9;color:#374151;cursor:pointer;font-size:13.5px;padding:5px 10px;border-radius:4px;width:100%;text-align:left;margin-top:2px;font-family:inherit}
 .addrow:hover{border-color:#c1121f;color:#c1121f}
-.fs-lbl{display:flex;align-items:center;gap:3px;font-size:11px;color:#4a6a7a;cursor:pointer;white-space:nowrap;flex-shrink:0;user-select:none}
+.fs-lbl{display:flex;align-items:center;gap:3px;font-size:12.5px;color:#374151;cursor:pointer;white-space:nowrap;flex-shrink:0;user-select:none}
 .fs-lbl input[type=checkbox]{width:auto!important;accent-color:#2ea043;cursor:pointer}
-.time-input.fs-active{border-color:#2ea043!important;color:#7ee787!important;background:#081a0e!important}
+.time-input.fs-active{border-color:#2ea043!important;color:#188121!important;background:#e0fae9!important}
 .dim{opacity:.35;pointer-events:none}
-.hint{font-size:10.5px;color:#3a5a7a;margin-top:3px}
-.pv-hdr{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#c1121f;margin-bottom:8px}
-.pv-meta{font-size:11px;color:#667;margin-bottom:4px;word-break:break-all}
-.pv-meta b{color:#aaa;font-weight:600}
-#pvbody,.pvbody{font-family:'Courier New',monospace;font-size:11.5px;white-space:pre-wrap;color:#b8c8d8;line-height:1.55;background:#0d1b2a;border:1px solid #0f3460;border-radius:6px;padding:12px;max-height:520px;overflow-y:auto;word-break:break-word}
-.sendbtn{display:block;width:100%;margin-top:10px;padding:11px;background:#c1121f;color:#fff;border:none;border-radius:6px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit}
+.hint{font-size:12px;color:#566070;margin-top:3px}
+.pv-hdr{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#c1121f;margin-bottom:8px}
+.pv-meta{font-size:12.5px;color:#566070;margin-bottom:4px;word-break:break-all}
+.pv-meta b{color:#374151;font-weight:600}
+#pvbody,.pvbody{font-family:'Courier New',monospace;font-size:13px;white-space:pre-wrap;color:#1f2937;line-height:1.55;background:#ffffff;border:1px solid #b6bdc9;border-radius:6px;padding:12px;max-height:520px;overflow-y:auto;word-break:break-word}
+.sendbtn{display:block;width:100%;margin-top:10px;padding:11px;background:#c1121f;color:#fff;border:none;border-radius:6px;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s;font-family:inherit}
 .sendbtn:hover{background:#a00f1a}
-.cpybtn{display:block;width:100%;margin-top:5px;padding:8px;background:none;color:#4a6a8a;border:1px solid #0f3460;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;transition:all .15s}
-.cpybtn:hover{border-color:#4a6a8a;color:#ccc}
-.tabs{display:flex;gap:2px;padding:8px 24px 0;background:#16213e;border-bottom:2px solid #0f3460}
-.tab-btn{padding:7px 18px;background:none;border:1px solid transparent;border-radius:6px 6px 0 0;border-bottom:none;color:#666;cursor:pointer;font-family:inherit;font-size:12.5px;font-weight:600;letter-spacing:.04em;transition:all .15s}
-.tab-btn.active{background:#1a1a2e;color:#e0e0e0;border-color:#0f3460;margin-bottom:-2px}
-.tab-btn:hover:not(.active){color:#aaa}
+.cpybtn{display:block;width:100%;margin-top:5px;padding:8px;background:none;color:#374151;border:1px solid #b6bdc9;border-radius:6px;font-size:13.5px;cursor:pointer;font-family:inherit;transition:all .15s}
+.cpybtn:hover{border-color:#566070;color:#111827}
+.tabs{display:flex;gap:2px;padding:8px 24px 0;background:#f5f6f8;border-bottom:2px solid #b6bdc9}
+.tab-btn{padding:7px 18px;background:none;border:1px solid transparent;border-radius:6px 6px 0 0;border-bottom:none;color:#374151;cursor:pointer;font-family:inherit;font-size:14px;font-weight:600;letter-spacing:.04em;transition:all .15s}
+.tab-btn.active{background:#ffffff;color:#111827;border-color:#b6bdc9;margin-bottom:-2px}
+.tab-btn:hover:not(.active){color:#374151}
 .tr-terr{display:flex;gap:5px;align-items:center;flex-shrink:0}
-.tr-terr label{display:flex;align-items:center;gap:2px;cursor:pointer;color:#aaa;font-size:11px}
+.tr-terr label{display:flex;align-items:center;gap:2px;cursor:pointer;color:#374151;font-size:12.5px}
 .tr-terr input[type=checkbox]{width:auto;accent-color:#c1121f}
 .modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:flex-start;justify-content:center;padding:36px 16px;z-index:1000;overflow-y:auto}
-.modal-box{background:#16213e;border:1px solid #0f3460;border-radius:8px;padding:18px;max-width:560px;width:100%}
-.modal-box .pv-hdr{font-size:13px;margin-bottom:12px}
-.rv-note{font-size:11px;color:#7a8a9a;margin:8px 0 0}
-.notice-bp{font-size:12.5px;color:#c8d4e0;line-height:1.6;background:#0d1b2a;border:1px solid #0f3460;border-radius:6px;padding:11px;white-space:pre-wrap}
-.notice-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:1px solid #0f3460;border-radius:5px;margin-bottom:6px;cursor:pointer;color:#c8d0d8;font-size:13px;background:#0d1b2a;transition:all .12s}
+.modal-box{background:#f5f6f8;border:1px solid #b6bdc9;border-radius:8px;padding:18px;max-width:560px;width:100%}
+.modal-box .pv-hdr{font-size:14.5px;margin-bottom:12px}
+.rv-note{font-size:12.5px;color:#566070;margin:8px 0 0}
+.notice-bp{font-size:14px;color:#1f2937;line-height:1.6;background:#ffffff;border:1px solid #b6bdc9;border-radius:6px;padding:11px;white-space:pre-wrap}
+.notice-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border:1px solid #b6bdc9;border-radius:5px;margin-bottom:6px;cursor:pointer;color:#1f2937;font-size:14.5px;background:#ffffff;transition:all .12s}
 .notice-item input[type=checkbox]{margin-top:2px;flex-shrink:0}
-.notice-item.on{background:#0d2417;border-color:#2ea043;color:#c8f0d8}
+.notice-item.on{background:#e1f9ec;border-color:#2ea043;color:#1b7e43}
 .notice-extra{margin:2px 0 10px 30px}
 .notice-extra input:disabled,.notice-extra select:disabled{opacity:.4;cursor:not-allowed}
+.embedded .hdr h1,.embedded .hdr p{display:none}
+.embedded .hdr{padding:6px 24px}
 </style>
+<script>
+/* Inside the AutoNav window the tab bar already names this tool. */
+if (window.self !== window.top) document.documentElement.classList.add("embedded");
+</script>
 </head>
 <body>
 <div class="hdr">
@@ -83,7 +89,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <h1>PAL Roadside Schedule Composer V2.3</h1>
     <p>Pop-A-Lock of Northern NJ &mdash; tech names validated against the canonical Google Sheet</p>
   </div>
-  <div style="font-size:11px;color:#7a8a9a;text-align:right" id="rosterBanner">Roster: not loaded &mdash; strict mode OFF</div>
+  <div style="font-size:12.5px;color:#566070;text-align:right" id="rosterBanner">Roster: not loaded &mdash; strict mode OFF</div>
 </div>
 <datalist id="techNames"></datalist>
 <div class="tabs">
@@ -92,7 +98,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
   <button class="tab-btn" onclick="switchTab('mgmt',this)">Management Notice</button>
   <button class="tab-btn" onclick="switchTab('bonus',this)">Bonus Impact</button>
   <button class="tab-btn" onclick="switchTab('settings',this)">Settings</button>
-  <button class="tab-btn" id="outboxTabBtn" onclick="switchTab('outbox',this)" style="display:none;color:#e8a020">Outbox (0)</button>
+  <button class="tab-btn" id="outboxTabBtn" onclick="switchTab('outbox',this)" style="display:none;color:#9a5b00">Outbox (0)</button>
 </div>
 <div id="scheduleTab">
 <div class="wrap">
@@ -161,7 +167,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
       <label style="display:inline-flex;align-items:center;gap:6px;white-space:nowrap;margin-right:10px"><input type="checkbox" id="lkAutoOn" onchange="upd()"> on duty</label>
       <input type="text" id="lkAutoTime" placeholder="9am-6pm" oninput="upd()" style="max-width:130px">
     </div>
-    <div class="hint" style="margin-top:8px;color:#7a8a9a">Listed by role only &mdash; no personal name. AutoNav resolves the role to the actual locksmith &amp; phone from the tech roster.</div>
+    <div class="hint" style="margin-top:8px;color:#566070">Listed by role only &mdash; no personal name. AutoNav resolves the role to the actual locksmith &amp; phone from the tech roster.</div>
   </div>
 
 
@@ -236,7 +242,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
     <div class="row" id="avReturnRow">
       <span class="lbl">Expected return</span>
       <input type="text" id="avReturn" placeholder="2:30pm" oninput="updAvail()" style="max-width:115px" disabled>
-      <label class="fs-lbl" style="margin-left:10px;color:#aaa">
+      <label class="fs-lbl" style="margin-left:10px;color:#374151">
         <input type="checkbox" id="avHasReturn" onchange="toggleExpectedReturn()"> Expected to Return
       </label>
     </div>
@@ -428,13 +434,13 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
       <button class="cpybtn" style="width:auto;margin:0;padding:6px 14px" onclick="refreshFromSheet()">Refresh from Sheet</button>
       <button class="cpybtn" style="width:auto;margin:0;padding:6px 14px" onclick="openEditorUrl()">Edit in Google Sheets</button>
     </div>
-    <div class="hint" id="sheetStatus" style="margin-top:8px;color:#7a8a9a">Roster not loaded yet.</div>
+    <div class="hint" id="sheetStatus" style="margin-top:8px;color:#566070">Roster not loaded yet.</div>
     <div class="hint" style="margin-top:10px">Both the Schedule Composer and the Scores Composer read the same Sheet so tech names stay consistent. The CSV URL comes from File &rarr; Share &rarr; Publish to web &rarr; CSV. The Editor URL is whatever's in your address bar while editing the sheet. URLs are saved in this browser's localStorage.</div>
-    <div class="hint warn" style="margin-top:10px;color:#e8a020"><b>Strict mode:</b> when a roster is loaded, the Open in Gmail buttons refuse to send if any tech name doesn't match a canonical name or alias on the sheet. A popup explains exactly which names are unknown. Add new techs to the Sheet first, click Refresh, then try again.</div>
+    <div class="hint warn" style="margin-top:10px;color:#9a5b00"><b>Strict mode:</b> when a roster is loaded, the Open in Gmail buttons refuse to send if any tech name doesn't match a canonical name or alias on the sheet. A popup explains exactly which names are unknown. Add new techs to the Sheet first, click Refresh, then try again.</div>
   </div>
   <div class="card">
     <div class="ct">Current Roster &mdash; <span id="rosterCount">0</span> techs</div>
-    <div id="rosterList" style="font-size:12px;color:#b8c8d8;line-height:1.6"></div>
+    <div id="rosterList" style="font-size:13.5px;color:#1f2937;line-height:1.6"></div>
   </div>
 </div>
 </div><!-- /wrap -->
@@ -446,7 +452,7 @@ input[type=checkbox]{accent-color:#c1121f;cursor:pointer}
 <div class="form" style="max-width:900px">
   <div class="card">
     <div class="ct">Pending Emails &mdash; <span id="outboxCount">0</span> queued
-      <button class="cpybtn" style="margin-left:auto;width:auto;margin:0;padding:6px 14px;color:#e8a020;border-color:#3a2a10" onclick="clearOutbox()">Clear all</button>
+      <button class="cpybtn" style="margin-left:auto;width:auto;margin:0;padding:6px 14px;color:#9a5b00;border-color:#e7cea7" onclick="clearOutbox()">Clear all</button>
     </div>
     <div class="hint" style="margin-bottom:10px">These emails were composed while you were offline.  Click <b>Send now</b> on each to open it in Gmail and hit send.  Then click <b>Mark sent</b> to remove it from this list.</div>
     <div id="outboxList"></div>
@@ -1637,11 +1643,11 @@ function updateRosterBanner() {
   let body, color;
   if (!roster.length) {
     body = 'Roster: not loaded — strict mode OFF';
-    color = navigator.onLine ? '#7a8a9a' : '#c1121f';
+    color = navigator.onLine ? '#566070' : '#c1121f';
   } else {
     const suffix = rosterFromCache ? ` (cached, ${relativeTime(rosterFetchedAt)})` : '';
     body = `Roster: ${roster.length} techs — strict mode ON${suffix}`;
-    color = navigator.onLine ? (rosterFromCache ? '#e8a020' : '#2ea043') : '#c1121f';
+    color = navigator.onLine ? (rosterFromCache ? '#9a5b00' : '#1a7f37') : '#c1121f';
   }
   banner.textContent = offlinePrefix + body;
   banner.style.color = color;
@@ -1651,7 +1657,7 @@ function renderSettings() {
   document.getElementById('rosterCount').textContent = roster.length;
   const list = document.getElementById('rosterList');
   if (!roster.length) {
-    list.innerHTML = '<i style="color:#5a6a7a">No roster loaded. Paste the CSV URL above and click Refresh from Sheet.</i>';
+    list.innerHTML = '<i style="color:#566070">No roster loaded. Paste the CSV URL above and click Refresh from Sheet.</i>';
     return;
   }
   list.innerHTML = '';
@@ -1659,8 +1665,8 @@ function renderSettings() {
     const aliases = (t.aliases || []).join(', ');
     const row = document.createElement('div');
     row.innerHTML = `<span style="display:inline-block;min-width:200px"><b>${escapeHtml(t.name)}</b></span>`
-      + `<span style="display:inline-block;min-width:80px;color:#7a8a9a">${escapeHtml(t.role)}</span>`
-      + (aliases ? `<span style="color:#7a8a9a">${escapeHtml(aliases)}</span>` : '');
+      + `<span style="display:inline-block;min-width:80px;color:#566070">${escapeHtml(t.role)}</span>`
+      + (aliases ? `<span style="color:#566070">${escapeHtml(aliases)}</span>` : '');
     list.appendChild(row);
   }
 }
@@ -1878,23 +1884,23 @@ function renderOutbox() {
   document.getElementById('outboxCount').textContent = items.length;
   const list = document.getElementById('outboxList');
   if (!items.length) {
-    list.innerHTML = '<i style="color:#5a6a7a">Nothing pending.</i>';
+    list.innerHTML = '<i style="color:#566070">Nothing pending.</i>';
     return;
   }
   list.innerHTML = '';
   for (const item of items) {
     const card = document.createElement('div');
-    card.style.cssText = 'border:1px solid #0f3460;border-radius:6px;padding:10px;margin-bottom:8px;background:#0d1b2a';
+    card.style.cssText = 'border:1px solid #b6bdc9;border-radius:6px;padding:10px;margin-bottom:8px;background:#ffffff';
     card.innerHTML =
-      '<div style="font-size:11px;color:#7a8a9a;margin-bottom:4px">'
+      '<div style="font-size:12.5px;color:#566070;margin-bottom:4px">'
         + escapeHtml(item.kind) + ' &middot; queued ' + escapeHtml(relativeTime(item.created_at)) + '</div>'
-      + '<div style="font-size:13px;color:#fff;margin-bottom:6px;font-weight:600">' + escapeHtml(item.subject) + '</div>'
-      + '<div style="font-size:11px;color:#7a8a9a;margin-bottom:8px;word-break:break-all">To: ' + escapeHtml((item.recipients || []).join(', ')) + '</div>'
-      + '<pre style="font-family:\'Courier New\',monospace;font-size:11px;color:#b8c8d8;white-space:pre-wrap;background:#16213e;padding:8px;border-radius:4px;max-height:180px;overflow:auto;margin-bottom:8px">' + escapeHtml(item.body) + '</pre>'
+      + '<div style="font-size:14.5px;color:#111827;margin-bottom:6px;font-weight:600">' + escapeHtml(item.subject) + '</div>'
+      + '<div style="font-size:12.5px;color:#566070;margin-bottom:8px;word-break:break-all">To: ' + escapeHtml((item.recipients || []).join(', ')) + '</div>'
+      + '<pre style="font-family:\'Courier New\',monospace;font-size:12.5px;color:#1f2937;white-space:pre-wrap;background:#f5f6f8;padding:8px;border-radius:4px;max-height:180px;overflow:auto;margin-bottom:8px">' + escapeHtml(item.body) + '</pre>'
       + '<div style="display:flex;gap:6px">'
         + '<button class="sendbtn" style="flex:1;margin:0;padding:8px" onclick="sendOutboxItem(\'' + item.id + '\')">&#9993; Send now</button>'
         + '<button class="cpybtn" style="width:auto;margin:0;padding:8px 14px" onclick="markSent(\'' + item.id + '\')">Mark sent</button>'
-        + '<button class="cpybtn" style="width:auto;margin:0;padding:8px 14px;color:#c1121f;border-color:#3a1010" onclick="removeOutboxItem(\'' + item.id + '\')">Remove</button>'
+        + '<button class="cpybtn" style="width:auto;margin:0;padding:8px 14px;color:#c1121f;border-color:#e7a7a7" onclick="removeOutboxItem(\'' + item.id + '\')">Remove</button>'
       + '</div>';
     list.appendChild(card);
   }
